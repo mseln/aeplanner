@@ -20,8 +20,8 @@ If you do not already have a workspace, set up a new one.
 ```
 mkdir -p catkin_ws/src
 cd catkin_ws/src
-catkin init
 cd ..
+catkin init
 catkin build
 ```
 
