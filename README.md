@@ -19,8 +19,7 @@ If you do not already have a workspace, set up a new one.
 
 ```
 mkdir -p ~/catkin_ws/src
-cd ~/catkin_ws/src
-cd ..
+cd ~/catkin_ws
 catkin init
 catkin build
 ```
