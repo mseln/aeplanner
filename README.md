@@ -5,7 +5,7 @@
 This repository has been tested with: 
 ```
 Ubuntu 16.04
-ROS Kinetic
+ROS Kinetic (Desktop full installation)
 catkin tools
 catkin simple
 OctoMap
