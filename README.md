@@ -15,6 +15,12 @@ it might work with other setups, but no guarantees are given.
 
 ## Setup dependencies
 
+#### Catkin tools
+
+Installation instructions [here](https://catkin-tools.readthedocs.io/en/latest/installing.html)
+
+#### Setup workspace
+
 If you do not already have a workspace, set up a new one.
 
 ```
@@ -24,18 +30,14 @@ catkin init
 catkin build
 ```
 
-Install dependencies
-
-Catkin tools
-
-Installation instructions [here](https://catkin-tools.readthedocs.io/en/latest/installing.html)
-
-Octomap
+#### Octomap
 ```
 sudo apt-get install "ros-kinetic-octomap-*
 ```
+or install from source.
 
-Catkin simple
+
+#### Catkin simple
 ```
 cd ~/catkin_ws/src
 git clone git@github.com:catkin/catkin_simple.git
