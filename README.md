@@ -61,3 +61,14 @@ To run the example directly without having to integrate the interface, the kth u
 https://github.com/danielduberg/kth_uav
 ```
 
+#### Troubleshooting installation of kth_uav
+
+If you get `Could not find a package configuration file provided by "geographic_msgs" with any of the following names:` install it by running:
+```
+sudo apt-get install ros-kinetic-geographic-msgs
+```
+
+If you get `ImportError: No module named future` install it by running:
+```
+pip install future
+```
