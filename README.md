@@ -26,6 +26,10 @@ catkin build
 
 Install dependencies
 
+Catkin tools
+
+Installation instructions [here](https://catkin-tools.readthedocs.io/en/latest/installing.html)
+
 Octomap
 ```
 sudo apt-get install "ros-kinetic-octomap-*
