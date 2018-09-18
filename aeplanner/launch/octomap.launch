@@ -1,0 +1,5 @@
+<launch>
+  <group ns="aeplanner">
+    <include file="$(find rpl_exploration)/launch/octomap_server.launch"/>
+  </group>
+</launch>

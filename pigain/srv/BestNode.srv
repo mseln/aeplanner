@@ -1,0 +1,5 @@
+geometry_msgs/Point pos
+float64 threshold
+---
+geometry_msgs/Point[] best_node
+float64 gain

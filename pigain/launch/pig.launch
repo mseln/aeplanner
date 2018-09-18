@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<launch>
+  <node name="pig" pkg="pigain" type="pig.py">
+    <param name="visualize_mean"  value="false" />
+    <param name="visualize_sigma" value="false" />
+    <param name="visualize_pts"   value="true" />
+
+    <remap from="pose" to="/mavros/local_position/pose"/>
+  </node>
+</launch>

@@ -1,0 +1,9 @@
+# Define the goal
+Header header
+geometry_msgs/Pose start
+geometry_msgs/Pose[] goal_poses
+-------
+# Define the result
+geometry_msgs/Pose[] path
+-------
+# Define a feedback message

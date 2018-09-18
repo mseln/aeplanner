@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<launch>
+  <arg name="mav_name" default="iris" />
+
+  <node pkg="tf" type="static_transform_publisher" name="hokuyo_broadcaster" args="0.02 0 0.08 0 0 0 base_link laser_link 100" />
+  <node pkg="tf" type="static_transform_publisher" name="primesense_broadcaster" args="0.05 0 0.13 -1.57079633 0 -1.57079633 base_link camera_link 100" />
+  <node pkg="tf" type="static_transform_publisher" name="sonar_up_broadcaster" args="-0.05 0 0.22 0 -1.57079633 0 base_link sonar_up_link 100" />
+  <node pkg="tf" type="static_transform_publisher" name="sonar_down_broadcaster" args="-0.05 0 -0.05 0 1.57079633 0 base_link sonar_down_link 100" />
+  <node pkg="tf" type="static_transform_publisher" name="teraranger_broadcaster" args="0 0 -0.05 0 1.57079633 0 base_link teraranger_link 100" />
+
+  <include file="$(find rpl_exploration)/launch/octomap_server.launch"/>
+  <include file="$(find pigain)/launch/pig.launch"/>
+  <include file="$(find aeplanner_evaluation)/launch/coverage_evaluation.launch"/>
+  <include file="$(find aeplanner)/launch/aeplanner_nodelet.launch"/>
+
+
+  <!--
+  <include file="$(find rpl_exploration)/launch/rpl_inspector.launch">
+    <arg name="mav_name" value="$(arg mav_name)" />
+    <arg name="param_file" value="$(find rpl_exploration)/config/exploration.yaml" />
+    <arg name="tf_frame" value="map" />
+    <arg name="resolution" value="0.2" />
+    <arg name="visualize_max_z" value="2.5" />
+    <arg name="sensor_max_range" value="5.0" />
+  </include>
+  -->
+
+  <node name="fly_to_server" pkg="rpl_exploration" type="fly_to">
+    <remap from="fly_to_cmd" to="/mavros/setpoint_position/local"/>
+  </node>
+
+  <node name="rrtplanner_node" pkg="rrtplanner" type="rrtplanner_node"/>
+  <node name="rpl_exploration" pkg="rpl_exploration" type="rpl_exploration" output="screen" />
+
+  <!--<include file="$(find rpl_exploration)/launch/laserscan_to_pointcloud.launch"/>-->
+
+
+
+</launch>

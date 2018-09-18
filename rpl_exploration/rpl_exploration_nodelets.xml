@@ -1,0 +1,18 @@
+<library path="lib/liblaserscan_to_pointcloud">
+  <class name="rpl_exploration/LTPNodelet" 
+         type="laserscan_to_pointcloud::LTPNodelet" 
+         base_class_type="nodelet::Nodelet">
+    <description>
+      Nodelet for transforming laserscan to pointcloud.
+    </description>
+  </class>
+</library>
+<library path="lib/libexploration_grid">
+  <class name="rpl_exploration/ExplorationGridNodelet" 
+         type="rpl_exploration::ExplorationGridNodelet" 
+         base_class_type="nodelet::Nodelet">
+    <description>
+      Nodelet for doing exploration in a grid manner
+    </description>
+  </class>
+</library>

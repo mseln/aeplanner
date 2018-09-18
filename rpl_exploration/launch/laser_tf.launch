@@ -1,0 +1,4 @@
+<?xml version="1.0" ?>
+<launch>
+  <node pkg="tf" type="static_transform_publisher" name="laser_link_broadcaster" args="0 0 0.15 0 0 0 fcu laser_link 50" />
+</launch>

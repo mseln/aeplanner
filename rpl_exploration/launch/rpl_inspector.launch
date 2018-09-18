@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<launch>
+  <arg name="mav_name" default="iris" />
+  <arg name="param_file" default="$(find rpl_exploration)/config/exploration.yaml" />
+  <arg name="tf_frame" default="map" />
+  <arg name="resolution" default="0.4" />
+  <arg name="visualize_max_z" default="999" />
+  <arg name="sensor_max_range" default="3.0" />
+  
+  <group ns="$(arg mav_name)">
+    <node name="aeplanner" pkg="aeplanner" type="explore" output="screen">
+      <param name="tf_frame" type="string" value="$(arg tf_frame)" />
+      <param name="resolution" type="double" value="$(arg resolution)" />
+      <param name="visualize_max_z" type="double" value="$(arg visualize_max_z)" />
+      <param name="sensor_max_range" type="double" value="$(arg sensor_max_range)" />
+      <remap from="pose" to="/mavros/local_position/pose"/>
+      <remap from="aeplanner" to="/$(arg mav_name)/aeplanner"/>
+      <remap from="octomap" to="/octomap_full"/>
+      <rosparam command="load" file="$(arg param_file)" />
+    </node>
+    <node name="rpl_exploration" pkg="rpl_exploration" type="rpl_exploration" output="screen" >
+      <rosparam command="load" file="$(arg param_file)" />
+    </node>
+  </group>
+</launch>

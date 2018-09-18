@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<launch>
+  <rosparam command="load" file="$(find aeplanner_evaluation)/config/evaluation.yaml" />
+  <node name="coverage_evaluation" pkg="aeplanner_evaluation" type="coverage_evaluation">
+    <remap from="octomap" to="/octomap_full"/>
+  </node>
+</launch>

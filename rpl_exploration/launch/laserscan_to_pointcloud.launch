@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<launch>
+  <node pkg="nodelet" type="nodelet" name="standalone_nodelet"  args="manager" output="screen"/>
+  <node pkg="nodelet" type="nodelet" name="LTPNodelet" args="load rpl_exploration/LTPNodelet standalone_nodelet" output="screen">
+    <param name="scan_topic"  type="string" value="scan" />
+    <param name="cloud_topic" type="string" value="cloud" />
+  </node>
+</launch>
