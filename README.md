@@ -32,7 +32,7 @@ catkin build
 
 #### Octomap
 ```
-sudo apt-get install "ros-kinetic-octomap-*
+sudo apt-get install "ros-kinetic-octomap-*"
 ```
 or install from source.
 
