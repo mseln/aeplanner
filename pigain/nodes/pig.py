@@ -11,8 +11,6 @@ from pigain.srv import BestNode, BestNodeResponse
 from aeplanner.srv import Reevaluate
 
 import numpy as np
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF, Matern
 from rtree import index
 
 import gp
@@ -56,8 +54,6 @@ class PIGain:
         self.bbx = (self.minx, self.miny, self.minz, self.maxx, self.maxy, self.maxz)
         self.hyperparam = gp.HyperParam(l = 1, sigma_f = 1, sigma_n = 0.1)
 
-
-        self.gpr = GaussianProcessRegressor(kernel=Matern(length_scale=0.1))
 
         # Create r-tree
         p = index.Property()
@@ -199,23 +195,6 @@ class PIGain:
 
 
 
-
-    def gp_old(self, y, x, xstar):
-        if(y.shape[0] is 0 or x.shape[0] is 0):
-            return (np.empty((0)), np.empty((0)))
-
-        print("GP: Start...")
-        print("GP: Fitting...")
-        self.gpr.fit(x, y)
-        print("GP: Predicting...")
-        rospy.logerr("New iteration")
-        rospy.logerr(x)
-        rospy.logerr(y)
-        mean, sigma = self.gpr.predict(xstar, return_std=True)
-
-        print("GP: Done!!")
-
-        return (mean, sigma)
 
     def rviz_callback(self, event):
         markers = MarkerArray()
