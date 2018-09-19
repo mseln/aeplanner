@@ -1,4 +1,4 @@
-# aeplanner
+# Autonomous Exploration Planner - aeplanner
 
 ## System Requirements
 
