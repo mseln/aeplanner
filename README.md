@@ -43,6 +43,12 @@ cd ~/catkin_ws/src
 git clone git@github.com:catkin/catkin_simple.git
 ```
 
+#### Install pigain dependencies
+```
+pip install rtree
+sudo apt-get install libspatialindex-dev
+```
+
 ## Setup aeplanner
 
 Clone this package (make sure that you are in catkin_ws/src)
