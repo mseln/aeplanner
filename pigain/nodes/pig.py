@@ -36,9 +36,6 @@ class PIGain:
         if self.visualize_mean or self.visualize_sigma:
             rospy.Timer(rospy.Duration(1), self.evaluate)
 
-
-        # rospy.Timer(rospy.Duration(1), self.purge_callback)
-
         self.minx = -100
         self.maxx =  100
         self.miny = -100
@@ -69,18 +66,22 @@ class PIGain:
         self.z = msg.pose.position.z
 
     def reevaluate_timer_callback(self, event):
-        bbx = (self.x-self.range, self.y-self.range, self.z-self.range, self.x+self.range, self.y+self.range, self.z+self.range)
+        if self.x is None or self.y is None or self.z is None:
+            rospy.logwarn("No position received yet...")
+            rospy.logwarn("Make sure that 'pose' has been correctly mapped and that it is being published")
+            return
+
+        bbx = (self.x-self.range, self.y-self.range, self.z-self.range, 
+               self.x+self.range, self.y+self.range, self.z+self.range)
 
         hits = self.idx.intersection(bbx, objects=True)
 
-        n_dirty = 0
         reevaluate_list = []
         reevaluate_position_list = []
         for item in hits:
             if(item.object.gain > 1):
                 reevaluate_position_list.append(item.object.position)
                 reevaluate_list.append(item)
-                n_dirty += 1
         try:
             res = self.reevaluate_client(reevaluate_position_list)
         except rospy.ServiceException, e:
@@ -150,7 +151,6 @@ class PIGain:
 
 
     def evaluate(self, event):
-        print("EVALUATE")
         y = np.empty((0))
         x = np.empty((0,3))
         xstar = np.empty((0,3))
@@ -165,24 +165,13 @@ class PIGain:
         yt = np.linspace(-5,  5, ny)
         zt = np.linspace(0.5, 2.5, nz)
 
-        print("Generating points...")
-        #print(xt)
-        #print(yt)
-        #print(zt)
-
         for xx in xt:
             for yy in yt:
                 for zz in zt:
                     xstar = np.append(xstar, [[xx, yy, zz]], axis = 0)
                     # print(str(xx) + " " + str(yy) + " " +str(zz))
 
-        print("Calling GP...")
-        rospy.sleep(1)
-
-        rospy.logwarn("Calling")
         mean, sigma = gp.gp(y, x, xstar, self.hyperparam, gp.sqexpkernel)
-        rospy.logwarn("Done")
-
         mean_markers = MarkerArray()
         sigma_markers = MarkerArray()
         for id, pts in enumerate(zip(xstar, mean, sigma)):
@@ -252,7 +241,6 @@ class PIGain:
 
 
 if __name__ == '__main__':
-    print("Starting node pigain")
     rospy.init_node('pigain', anonymous=True)
     pigain = PIGain()
     rospy.spin()
