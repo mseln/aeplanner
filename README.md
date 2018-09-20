@@ -67,6 +67,12 @@ Read the Assumptions and follow the install instructions on that page.
 
 #### Troubleshooting installation of kth_uav
 
+If you get `No rule to make target '/home/rpl/catkin_ws/src/kth_uav/Firmware/Tools/sitl_gazebo/PROTOBUF_PROTOC_EXECUTABLE-NOTFOUND', needed by 'Groundtruth.pb.cc'.  Stop.`, install libprotobuf by running:
+
+```
+sudo apt-get install libprotobuf-dev
+```
+
 If you get `Could not find a package configuration file provided by "geographic_msgs" with any of the following names:` install it by running:
 ```
 sudo apt-get install ros-kinetic-geographic-msgs
