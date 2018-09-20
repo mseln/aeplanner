@@ -1,9 +1,10 @@
 # Autonomous Exploration Planner - aeplanner
 
 ## Assumptions
-1). You are running `Ubuntu 16.04`
-2). You are using bash, zsh is also possible with some [modifications](https://github.com/mseln/aeplanner/wiki/Use-zsh-instead-of-bash).
-3). You have `ros-kinetic-desktop-installed`, otherwise follow installation instructions [here](http://wiki.ros.org/kinetic/Installation/Ubuntu)
+1. You are running `Ubuntu 16.04`
+2. You are using bash, zsh is also possible with some [modifications](https://github.com/mseln/aeplanner/wiki/Use-zsh-instead-of-bash).
+3. You have `ros-kinetic-desktop-installed`, otherwise follow installation instructions [here](http://wiki.ros.org/kinetic/Installation/Ubuntu)
+4. You have created a workspace in `~/catkin_ws`. If in another location [these](https://github.com/mseln/aeplanner/wiki/Other-location-than-~-catkin_ws) things need to be modified.
 
 ## System Requirements
 This repository has been tested with: 
