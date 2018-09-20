@@ -88,3 +88,11 @@ If you get `Could NOT find GeographicLib (missing: GeographicLib_LIBRARIES Geogr
 ```
 sudo apt-get install libgeographic-dev
 ```
+
+When running `roslaunch simulation simulation.launch` if you get `Arg xml is <arg default="$(find mavlink_sitl_gazebo)/worlds/empty.world" name="world"/>` fix it by changing line 14 and 15 in `kth_uav/Firmware/launch/mavros_posix_sitl.launch` to
+```
+    <arg name="world"/>  
+    <arg name="sdf"/>
+```
+do the same with line in file 12 and 13 `kth_uav/Firmware/launch/posix_sitl.launch`.
+
