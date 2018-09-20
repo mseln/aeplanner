@@ -1,10 +1,5 @@
 # Autonomous Exploration Planner - aeplanner
 
-## Assumptions
-1. You are running `Ubuntu 16.04`
-2. You are using bash, zsh is also possible with some [modifications](https://github.com/mseln/aeplanner/wiki/Use-zsh-instead-of-bash).
-3. You have `ros-kinetic-desktop-installed`, otherwise follow installation instructions [here](http://wiki.ros.org/kinetic/Installation/Ubuntu)
-4. You have created a workspace in `~/catkin_ws`. If in another location [these](https://github.com/mseln/aeplanner/wiki/Other-location-than-~-catkin_ws) things need to be modified.
 
 ## System Requirements
 This repository has been tested with: 
@@ -15,19 +10,28 @@ catkin tools
 catkin simple
 OctoMap
 ```
-
 it might work with other setups, but no guarantees are given.
 
-## Setup dependencies
+## Assumptions
+1. You are running `Ubuntu 16.04`
+2. You are using bash, zsh is also possible with some [modifications](https://github.com/mseln/aeplanner/wiki/Use-zsh-instead-of-bash).
+3. You have `ros-kinetic-desktop-installed`, otherwise follow installation instructions [here](http://wiki.ros.org/kinetic/Installation/Ubuntu)
+4. You have created a workspace in `~/catkin_ws`, without running `catkin_make`. If in another location [these](https://github.com/mseln/aeplanner/wiki/Other-location-than-~-catkin_ws) things need to be modified.
+5. You have installed [`catkin tools`](https://catkin-tools.readthedocs.io/en/latest/installing.html)
 
-#### Catkin tools
 
-Installation instructions [here](https://catkin-tools.readthedocs.io/en/latest/installing.html)
+## Installation of dependencies
 
-#### Setup workspace
+1. You have installed [`octomap`](http://wiki.ros.org/octomap) if not install it by running `sudo apt-get install "ros-kinetic-octomap-*"` or install from source.
 
+2. Catkin simple
+```
+cd ~/catkin_ws/src
+git clone git@github.com:catkin/catkin_simple.git
+```
+
+## Setup workspace
 If you do not already have a workspace, set up a new one.
-
 ```
 mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws
@@ -35,18 +39,7 @@ catkin init
 catkin build
 ```
 
-#### Octomap
-```
-sudo apt-get install "ros-kinetic-octomap-*"
-```
-or install from source.
 
-
-#### Catkin simple
-```
-cd ~/catkin_ws/src
-git clone git@github.com:catkin/catkin_simple.git
-```
 
 #### Install pigain dependencies
 ```
