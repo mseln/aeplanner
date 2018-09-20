@@ -24,10 +24,16 @@ it might work with other setups, but no guarantees are given.
 
 1. You have installed [`octomap`](http://wiki.ros.org/octomap) if not install it by running `sudo apt-get install "ros-kinetic-octomap-*"` or install from source.
 
-2. Catkin simple
+2. Catkin simple is needed to build the rtree package
 ```
 cd ~/catkin_ws/src
 git clone git@github.com:catkin/catkin_simple.git
+```
+
+3. PIGain depends on rtree which in turn needs libspatialindex (note this rtree is different from the one above).
+```
+pip install rtree
+sudo apt-get install libspatialindex-dev
 ```
 
 ## Setup workspace
@@ -37,14 +43,6 @@ mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws
 catkin init
 catkin build
-```
-
-
-
-#### Install pigain dependencies
-```
-pip install rtree
-sudo apt-get install libspatialindex-dev
 ```
 
 ## Setup aeplanner
