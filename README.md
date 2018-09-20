@@ -67,6 +67,10 @@ Read the Assumptions and follow the install instructions on that page.
 
 #### Troubleshooting installation of kth_uav
 
+If you get `couldn't find python module jinja2:` install jinja2 by running:
+```
+sudo apt-get install python-jinja2
+```
 
 If you get `ImportError: No module named future` install it by running:
 ```
