@@ -1,7 +1,11 @@
 # Autonomous Exploration Planner - aeplanner
 
-## System Requirements
+## Assumptions
+1). You are running `Ubuntu 16.04`
+2). You are using bash, zsh is also possible with some [modifications](https://github.com/mseln/aeplanner/wiki/Use-zsh-instead-of-bash).
+3). You have `ros-kinetic-desktop-installed`, otherwise follow installation instructions [here](http://wiki.ros.org/kinetic/Installation/Ubuntu)
 
+## System Requirements
 This repository has been tested with: 
 ```
 Ubuntu 16.04
@@ -14,10 +18,6 @@ OctoMap
 it might work with other setups, but no guarantees are given.
 
 ## Setup dependencies
-
-#### ROS kinetic
-
-If you have a clean Ubuntu 16.04 installation, follow [these](https://github.com/mseln/aeplanner/wiki/Installation-ROS) insctructions to install ROS kinetic.
 
 #### Catkin tools
 
@@ -70,6 +70,8 @@ To run the example directly without having to integrate the interface, the kth u
 ```
 https://github.com/danielduberg/kth_uav
 ```
+
+Read the Assumptions and follow the install instructions on that page.
 
 #### Troubleshooting installation of kth_uav
 
