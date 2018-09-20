@@ -21,9 +21,10 @@ class PIGain:
         self.best_node_srv = rospy.Service('best_node_server', BestNode, self.best_node_srv_callback)
         self.reevaluate_client = rospy.ServiceProxy('reevaluate', Reevaluate)
 
-        self.visualize_mean  = rospy.get_param('~visualize_mean',  False)
-        self.visualize_sigma = rospy.get_param('~visualize_sigma', False)
-        self.visualize_pts   = rospy.get_param('~visualize_pts',   False)
+        self.visualize_mean  = rospy.get_param('~visualize/mean',  False)
+        self.visualize_sigma = rospy.get_param('~visualize/sigma', False)
+        self.visualize_pts   = rospy.get_param('~visualize/pts',   False)
+        self.resolution      = rospy.get_param('~visualize/resolution',   1)
 
         self.gain_sub = rospy.Subscriber('gain_node', Node, self.gain_callback)
         self.pose_sub = rospy.Subscriber('pose', PoseStamped, self.pose_callback)
@@ -34,7 +35,7 @@ class PIGain:
         if self.visualize_pts:
             rospy.Timer(rospy.Duration(1), self.rviz_callback)
         if self.visualize_mean or self.visualize_sigma:
-            rospy.Timer(rospy.Duration(1), self.evaluate)
+            rospy.Timer(rospy.Duration(5), self.evaluate)
 
         # Get environment boundaries
         try:
@@ -170,25 +171,21 @@ class PIGain:
             y = np.append(y, [item.object.gain], axis=0)
             x = np.append(x, [[item.object.position.x, item.object.position.y, item.object.position.z]], axis = 0)
 
-        # nx, ny, nz = (32, 32, 6)
-        nx, ny, nz = (10, 10, 4)
-        xt = np.linspace(-10, 10, nx)
-        yt = np.linspace(-5,  5, ny)
-        zt = np.linspace(0.5, 2.5, nz)
+        xt = np.arange(self.min[0], self.max[0], self.resolution)
+        yt = np.arange(self.min[1], self.max[1], self.resolution)
+        zt = [1]
 
         for xx in xt:
             for yy in yt:
                 for zz in zt:
                     xstar = np.append(xstar, [[xx, yy, zz]], axis = 0)
-                    # print(str(xx) + " " + str(yy) + " " +str(zz))
 
         mean, sigma = gp.gp(y, x, xstar, self.hyperparam, gp.sqexpkernel)
         mean_markers = MarkerArray()
         sigma_markers = MarkerArray()
         for id, pts in enumerate(zip(xstar, mean, sigma)):
-            if(pts[2] < 0.5):
-                mean_markers.markers.append(self.np_array_to_marker(id, pts[0], pts[1] / 16))
-                sigma_markers.markers.append(self.np_array_to_marker(id, pts[0], pts[2] * 2))
+            mean_markers.markers.append(self.np_array_to_marker(id, pts[0], pts[1] / 16, max(1-pts[2], 0)))
+            # sigma_markers.markers.append(self.np_array_to_marker(id, pts[0], pts[2] * 2))
         
         self.mean_pub.publish(mean_markers)
         self.sigma_pub.publish(sigma_markers)
@@ -203,23 +200,23 @@ class PIGain:
         self.marker_pub.publish(markers)
 
 
-    def np_array_to_marker(self, id, a, v=0):
+    def np_array_to_marker(self, id, p, v=0, a=0):
         marker = Marker()
         marker.header.frame_id = "map"
-        marker.type = marker.SPHERE
+        marker.type = marker.CUBE
         marker.action = marker.ADD
         marker.id = id
-        marker.scale.x = 0.2
-        marker.scale.y = 0.2
-        marker.scale.z = 0.2
+        marker.scale.x = self.resolution
+        marker.scale.y = self.resolution
+        marker.scale.z = 0.1
         marker.color.r = v
         marker.color.g = 0
         marker.color.b = 0.5
-        marker.color.a = 1.0
+        marker.color.a = a
         marker.pose.orientation.w = 1.0
-        marker.pose.position.x = a[0]
-        marker.pose.position.y = a[1]
-        marker.pose.position.z = a[2]
+        marker.pose.position.x = p[0]
+        marker.pose.position.y = p[1]
+        marker.pose.position.z = p[2]
         marker.lifetime = rospy.Time(10)
 
         return marker
