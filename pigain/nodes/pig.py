@@ -36,21 +36,29 @@ class PIGain:
         if self.visualize_mean or self.visualize_sigma:
             rospy.Timer(rospy.Duration(1), self.evaluate)
 
-        self.minx = -100
-        self.maxx =  100
-        self.miny = -100
-        self.maxy =  100
-        self.minz = -100
-        self.maxz =  100
+        # Get environment boundaries
+        try:
+            self.min = rospy.get_param('boundary/min')
+            self.max = rospy.get_param('boundary/max')
+        except KeyError:
+            rospy.logwarn("Boundary parameters not specified")
+            rospy.logwarn("Defaulting to (-100, -100, 0), (100, 100, 3)...")
+            self.min = [-100, -100, 0]
+            self.max = [ 100,  100, 3]
+
+        try:
+            self.range = 2*rospy.get_param('aep/gain/r_max')
+        except KeyError:
+            rospy.logwarn("Range max parameter not specified")
+            rospy.logwarn("Defaulting to 8 m...")
+
+        self.bbx = (self.min[0], self.min[1], self.min[2], self.max[0], self.max[1], self.max[2])
 
         self.x = None
         self.y = None
         self.z = None
 
-        self.range = 6
-        self.bbx = (self.minx, self.miny, self.minz, self.maxx, self.maxy, self.maxz)
         self.hyperparam = gp.HyperParam(l = 1, sigma_f = 1, sigma_n = 0.1)
-
 
         # Create r-tree
         p = index.Property()
@@ -60,11 +68,13 @@ class PIGain:
 
         rospy.Timer(rospy.Duration(1), self.reevaluate_timer_callback)
 
+    """ Save current pose of agent """
     def pose_callback(self, msg):
         self.x = msg.pose.position.x
         self.y = msg.pose.position.y
         self.z = msg.pose.position.z
 
+    """ Reevaluate gain in all cached nodes that are closer to agent than self.range """
     def reevaluate_timer_callback(self, event):
         if self.x is None or self.y is None or self.z is None:
             rospy.logwarn("No position received yet...")
@@ -95,10 +105,12 @@ class PIGain:
             self.idx.delete(item.id, (item.object.position.x, item.object.position.y, item.object.position.z))
             self.idx.insert(item.id, (item.object.position.x, item.object.position.y, item.object.position.z), obj=item.object)
 
+    """ Insert node with estimated gain in rtree """
     def gain_callback(self, msg):
         self.idx.insert(self.id, (msg.position.x, msg.position.y, msg.position.z), obj=msg)
         self.id += 1
 
+    """ Handle query to Gaussian Process """
     def query_server(self, req):
         bbx = (req.point.x-1, req.point.y-1, req.point.z-1, 
                req.point.x+1, req.point.y+1, req.point.z+1)
@@ -132,10 +144,9 @@ class PIGain:
 
         return response
 
-
+    """ Return all nodes with gain higher than req.threshold """
     def best_node_srv_callback(self, req):
-        bbx = (self.minx, self.miny, self.minz, self.maxx, self.maxy, self.maxz)
-        hits = self.idx.intersection(bbx, objects=True)
+        hits = self.idx.intersection(self.bbx, objects=True)
 
         best_gain = -1
         best_pose = None
@@ -149,7 +160,7 @@ class PIGain:
         response.gain = best_gain
         return response
 
-
+    """ Evaluate potential information gain function over grid and publish it in rviz """
     def evaluate(self, event):
         y = np.empty((0))
         x = np.empty((0,3))
@@ -182,9 +193,7 @@ class PIGain:
         self.mean_pub.publish(mean_markers)
         self.sigma_pub.publish(sigma_markers)
 
-
-
-
+    """ Publish all cached nodes in rviz """
     def rviz_callback(self, event):
         markers = MarkerArray()
         hits = self.idx.intersection(self.bbx, objects=True)
