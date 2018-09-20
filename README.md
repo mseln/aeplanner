@@ -15,6 +15,10 @@ it might work with other setups, but no guarantees are given.
 
 ## Setup dependencies
 
+#### ROS kinetic
+
+If you have a clean Ubuntu 16.04 installation, follow (these)[https://github.com/mseln/aeplanner/wiki/Installation-ROS] insctructions to install ROS kinetic.
+
 #### Catkin tools
 
 Installation instructions [here](https://catkin-tools.readthedocs.io/en/latest/installing.html)
