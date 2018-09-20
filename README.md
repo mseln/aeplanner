@@ -93,6 +93,13 @@ If you get `Could NOT find GeographicLib (missing: GeographicLib_LIBRARIES Geogr
 sudo apt-get install libgeographic-dev
 ```
 
+If gazebo is complaining about `GeographicLib exception: File not readable /usr/share/GeographicLib/geoids/egm96-5.pgm`, install  `geographiclib-tools` and run the install script again.
+```
+sudo apt-get install geographiclib-tools
+sudo ./kth_uav/mavros/mavros/scripts/install_geographiclib_datasets.sh
+```
+
+
 When running `roslaunch simulation simulation.launch` if you get `Arg xml is <arg default="$(find mavlink_sitl_gazebo)/worlds/empty.world" name="world"/>` fix it by changing line 14 and 15 in `kth_uav/Firmware/launch/mavros_posix_sitl.launch` to
 ```
     <arg name="world"/>  
