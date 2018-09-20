@@ -27,7 +27,7 @@ it might work with other setups, but no guarantees are given.
 2. Catkin simple is needed to build the rtree package
 ```
 cd ~/catkin_ws/src
-git clone git@github.com:catkin/catkin_simple.git
+git clone https://github.com/catkin/catkin_simple.git
 ```
 
 3. PIGain depends on rtree which in turn needs libspatialindex (note this rtree is different from the one above).
@@ -50,7 +50,7 @@ catkin build
 Clone this package (make sure that you are in catkin_ws/src)
 ```
 cd ~/catkin_ws/src/
-git clone git@github.com:mseln/aeplanner.git
+git clone https://github.com/mseln/aeplanner.git
 cd ..
 catkin build
 ```
