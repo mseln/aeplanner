@@ -67,6 +67,10 @@ namespace aeplanner_ns {
       std::string frame_id_;
 
       ros::Publisher path_pub_;
+      double min_nodes_;
+      double bounding_radius_;
+      double bounding_overshoot_;
+      double extension_range_;
   };
 
   float CylTest_CapsFirst( const octomap::point3d & pt1, 

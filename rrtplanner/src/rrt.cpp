@@ -8,19 +8,44 @@ namespace aeplanner_ns{
     octomap_sub_(nh_.subscribe("octomap", 1, &Rrt::octomapCallback, this)),
     as_(nh_, "rrt", boost::bind(&Rrt::execute, this, _1), false)
   {
-    ot_ = new octomap::OcTree(1);  // Create dummy OcTree to prevent crash due to ot_ tree not initialized
+
+    std::string ns = ros::this_node::getNamespace();
+    bounding_radius_ = 0.5;
+    bounding_overshoot_ = 0.5;
+    extension_range_ = 1.0;
+    min_nodes_ = 100;
+    if (!ros::param::get(ns + "/rrt/min_nodes", min_nodes_))
+      ROS_WARN("No minimum nodes specified default is 100");
+    if (!ros::param::get(ns + "/system/bbx/r", bounding_radius_))
+      ROS_WARN("No bounding radius specified default is 0.5 m");
+    if (!ros::param::get(ns + "/system/bbx/overshoot", bounding_overshoot_))
+      ROS_WARN("No overshoot paramerer specified, default is 0.5 m");
+    if (!ros::param::get(ns + "/aep/tree/extension_range", extension_range_))
+      ROS_WARN("No extension range specified, default is 1.0 m");
+
     as_.start();
   }
 
   void Rrt::execute(const rrtplanner::rrtGoalConstPtr& goal){
     rrtplanner::rrtResult result;
+    if(!ot_)
+    {
+      ROS_WARN("No octomap received");
+      as_.setSucceeded(result);
+      return;
+    }
+    if(!goal->goal_poses.size())
+    {
+      ROS_WARN("No goals received");
+      as_.setSucceeded(result);
+      return;
+    }
 
-    int N = 100;
-    double l = 1;
-    double r = 0.5;
-    double r_os = 0.25;
+    int N = min_nodes_;
+    double l = extension_range_;
+    double r = bounding_radius_;
+    double r_os = bounding_overshoot_;
     std::vector<RrtNode*> found_goals;
-
 
     kdtree * kd_tree   = kd_create(3); // Initalize tree
     kdtree * goal_tree = kd_create(3); // kd tree with all goals

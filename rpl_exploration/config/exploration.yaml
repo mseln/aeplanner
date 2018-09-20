@@ -18,10 +18,12 @@ aep/tree/max_sampling_radius: 10
 aep/tree/initial_iterations: 15
 aep/tree/cutoff_iterations: 30
 
+rrt/min_nodes: 100
+
 # bounding box: necessary to limit the simulation 
 # scenario (smaller than actual gazebo scenario)
-boundary/min: [-50.0, -50.0,  0.0]
-boundary/max: [ 50.0,  50.0,  2.0]
+boundary/min: [-10.0, -10.0,  0.0]
+boundary/max: [ 10.0,  10.0,  2.0]
 
 visualize_rays: false
 visualize_tree: true
