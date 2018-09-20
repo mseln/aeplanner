@@ -82,3 +82,8 @@ If you get `ImportError: No module named future` install it by running:
 ```
 pip install future
 ```
+
+If you get `Could NOT find GeographicLib (missing: GeographicLib_LIBRARIES GeographicLib_INCLUDE_DIRS)` fix it by installing:
+```
+sudo apt-get install libgeographic-dev
+```
