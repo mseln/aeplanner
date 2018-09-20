@@ -34,6 +34,12 @@ namespace aeplanner
       as_.setSucceeded(result);
       return;
     }
+    if(!ot_)
+    {
+      ROS_WARN("No octomap received");
+      as_.setSucceeded(result);
+      return;
+    }
 
     ROS_DEBUG("Init");
     RRTNode * root = initialize();
