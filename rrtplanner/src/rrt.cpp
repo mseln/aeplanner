@@ -23,6 +23,7 @@ namespace aeplanner_ns{
     if (!ros::param::get(ns + "/aep/tree/extension_range", extension_range_))
       ROS_WARN("No extension range specified, default is 1.0 m");
 
+    ot_ = new octomap::OcTree(1);  // Create dummy OcTree to prevent crash due to ot_ tree not initialized
     as_.start();
   }
 
