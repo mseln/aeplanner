@@ -228,12 +228,12 @@ class PIGain:
         marker.type = marker.SPHERE
         marker.action = marker.ADD
         marker.id = id
-        marker.scale.x = 0.2
-        marker.scale.y = 0.2
-        marker.scale.z = 0.2
+        marker.scale.x = 0.4
+        marker.scale.y = 0.4
+        marker.scale.z = 0.4
         marker.color.r = node.gain / 16
-        marker.color.g = 0.5
-        marker.color.b = 0.0
+        marker.color.g = 0.0
+        marker.color.b = 0.5
         marker.color.a = 1.0
         marker.pose.orientation.w = 1.0
         marker.pose.position.x = node.position.x
