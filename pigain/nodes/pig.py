@@ -202,7 +202,7 @@ class PIGain:
 
     def np_array_to_marker(self, id, p, v=0, a=0):
         marker = Marker()
-        marker.header.frame_id = "map"
+        marker.header.frame_id = "world"
         marker.type = marker.CUBE
         marker.action = marker.ADD
         marker.id = id
@@ -224,7 +224,7 @@ class PIGain:
 
     def node_to_marker(self, id, node):
         marker = Marker()
-        marker.header.frame_id = "map"
+        marker.header.frame_id = "world"
         marker.type = marker.SPHERE
         marker.action = marker.ADD
         marker.id = id

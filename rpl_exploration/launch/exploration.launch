@@ -3,13 +3,13 @@
   <arg name="param_file" default="$(find rpl_exploration)/config/exploration.yaml" />
 
 
-  <group ns="aeplanner">
-    <node pkg="tf" type="static_transform_publisher" name="primesense_broadcaster" args="0.05 0 0.13 -1.57079633 0 -1.57079633 base_link camera_link 100" />
-
+  <group>
+	  <!--<node type="nodelet" name="aeplanner_nodelet_manager" pkg="nodelet" args="manager" output="screen"/>-->
+    <include file="$(find rpl_exploration)/launch/primesense.launch"/>
+    <include file="$(find rpl_exploration)/launch/octomap_server_nodelet.launch"/>
     <include file="$(find aeplanner)/launch/aeplanner_nodelet.launch"/>
     <include file="$(find pigain)/launch/pig.launch"/>
     <include file="$(find rpl_exploration)/launch/fly_to.launch"/>
-    <include file="$(find rpl_exploration)/launch/octomap_server.launch"/>
     <include file="$(find rrtplanner)/launch/rrtplanner.launch"/>
 
     <node name="rpl_exploration" pkg="rpl_exploration" type="rpl_exploration" output="screen" />

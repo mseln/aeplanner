@@ -3,7 +3,7 @@
 namespace aeplanner_ns{
   Rrt::Rrt(const ros::NodeHandle& nh) : 
     nh_(nh),
-    frame_id_("map"),
+    frame_id_("world"),
     path_pub_(nh_.advertise<visualization_msgs::Marker>("rrt_path", 1000)),
     octomap_sub_(nh_.subscribe("octomap", 1, &Rrt::octomapCallback, this)),
     as_(nh_, "rrt", boost::bind(&Rrt::execute, this, _1), false)

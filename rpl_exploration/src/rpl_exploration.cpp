@@ -63,11 +63,12 @@ int main(int argc, char** argv)
 
   for (int i = 0; i < 2; ++i) {
     rpl_exploration::FlyToGoal goal;
+    goal.pose.header.frame_id = "world";
     goal.pose.pose.position.x = initial_positions[i][0];
     goal.pose.pose.position.y = initial_positions[i][1];
     goal.pose.pose.position.z = initial_positions[i][2];
     goal.pose.pose.orientation = tf::createQuaternionMsgFromYaw(initial_positions[i][3]);	
-    last_pose.pose = goal.pose.pose;
+    last_pose = goal.pose;
 
     ROS_INFO_STREAM("Sending initial goal...");
     ac.sendGoal(goal);
@@ -85,7 +86,7 @@ int main(int argc, char** argv)
     aeplanner::aeplannerGoal aep_goal;
     aep_goal.header.stamp = ros::Time::now();
     aep_goal.header.seq = iteration;
-    aep_goal.header.frame_id = "map";
+    aep_goal.header.frame_id = "world";
     aep_goal.actions_taken = actions_taken;
     aep_ac.sendGoal(aep_goal);
 
@@ -119,7 +120,7 @@ int main(int argc, char** argv)
     else{
       rrtplanner::rrtGoal rrt_goal;
       rrt_goal.header.stamp = ros::Time::now();
-      rrt_goal.header.frame_id = "map";
+      rrt_goal.header.frame_id = "world";
       rrt_goal.start = last_pose.pose;
       if(!aep_ac.getResult()->frontiers.poses.size())
       {

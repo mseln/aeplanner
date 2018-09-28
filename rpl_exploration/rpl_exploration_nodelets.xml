@@ -16,3 +16,12 @@
     </description>
   </class>
 </library>
+<library path="lib/libprimesense_to_pointcloud">
+  <class name="rpl_exploration/PTPNodelet" 
+         type="primesense_to_pointcloud::PTPNodelet" 
+         base_class_type="nodelet::Nodelet">
+    <description>
+      Nodelet for transforming primesense to pointcloud.
+    </description>
+  </class>
+</library>

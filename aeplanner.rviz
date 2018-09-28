@@ -34,7 +34,7 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        base_link:
+        fcu:
           Value: false
         camera_link:
           Value: true
@@ -55,7 +55,7 @@ Visualization Manager:
       Show Names: false
       Tree:
         map:
-          base_link:
+          fcu:
             camera_link:
               {}
       Update Interval: 0

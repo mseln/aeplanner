@@ -2,7 +2,7 @@
 <launch>
   <arg name="mav_name" default="iris" />
   <arg name="param_file" default="$(find rpl_exploration)/config/exploration.yaml" />
-  <arg name="tf_frame" default="map" />
+  <arg name="tf_frame" default="world" />
   <arg name="resolution" default="0.4" />
   <arg name="visualize_max_z" default="999" />
   <arg name="sensor_max_range" default="3.0" />

@@ -106,9 +106,9 @@ namespace aeplanner
       ROS_WARN("No world frame specified. Looking for %s. Default is 'world'.",
           (ns + "/world_frame").c_str());
     }
-    params.robot_frame = "base_link";
+    params.robot_frame = "fcu";
     if (!ros::param::get(ns + "/robot_frame", params.robot_frame)) {
-      ROS_WARN("No robot frame specified. Looking for %s. Default is 'base_link'.",
+      ROS_WARN("No robot frame specified. Looking for %s. Default is 'fcu'.",
           (ns + "/robot_frame").c_str());
     }
     params.visualize_tree = false;

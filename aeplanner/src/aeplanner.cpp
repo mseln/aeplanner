@@ -13,7 +13,7 @@ namespace aeplanner
     reevaluate_server_(nh_.advertiseService("reevaluate", &AEPlanner::reevaluate, this)),
     best_node_client_(nh_.serviceClient<pigain::BestNode>("best_node_server")),
     current_state_initialized_(false),
-    aot_(NULL), ot_(NULL), best_node_(NULL), best_branch_root_(NULL)
+    best_node_(NULL), best_branch_root_(NULL)
   {
     params_ = readParams();
     as_.start();
@@ -34,12 +34,14 @@ namespace aeplanner
       as_.setSucceeded(result);
       return;
     }
-    if(!ot_)
+    if(!new_ot_)
     {
       ROS_WARN("No octomap received");
       as_.setSucceeded(result);
       return;
     }
+    else
+      ot_ = new_ot_;
 
     ROS_DEBUG("Init");
     RRTNode * root = initialize();
@@ -389,19 +391,28 @@ namespace aeplanner
 
     for(octomap::OcTree::leaf_bbx_iterator it  = ot_->begin_leafs_bbx(min, max);
                                            it != ot_->end_leafs_bbx(); ++it)
-    {
-      
+    { 
+      ROS_DEBUG("Getting pt position [START]"); 
       octomap::point3d pt(it.getX(), it.getY(), it.getZ());
+      ROS_DEBUG_STREAM("Getting pt position [DONE] pt = (" << pt.x() << ", " << pt.y() << ", " << pt.z() << ")"); 
 
+      ROS_DEBUG("Getting log odds [START]" ); 
       if(it->getLogOdds() > 0 ) // Node is occupied
       {
+        ROS_DEBUG("Getting log odds [DONE] collision" ); 
         if(CylTest_CapsFirst(start, end, lsq, rsq, pt) > 0 or (end-pt).norm() < r) 
         {
+    	    ROS_DEBUG_STREAM("In collision (exiting true)");
             return true;
         }
+	else
+    	    ROS_DEBUG_STREAM("No collision");
+
       }
+      else
+        ROS_DEBUG("Getting log odds [DONE] free" ); 
     }
-    ROS_DEBUG_STREAM("In collision (exiting)");
+    ROS_DEBUG_STREAM("In collision (exiting false)");
 
     return false;
   }
@@ -409,12 +420,8 @@ namespace aeplanner
   void AEPlanner::octomapCallback(const octomap_msgs::Octomap& msg)
   {
     ROS_DEBUG_STREAM("Freeing ot_");
-    aot_ = octomap_msgs::msgToMap(msg);
-    octomap::OcTree * ot = ot_;
-    ot_ = (octomap::OcTree*)aot_;
-
-    if(ot) 
-      delete ot;
+    octomap::AbstractOcTree * aot = octomap_msgs::msgToMap(msg);
+    new_ot_ = boost::shared_ptr<octomap::OcTree>((octomap::OcTree*)aot);
     ROS_DEBUG_STREAM("Freeing ot_ done:");
   }
 

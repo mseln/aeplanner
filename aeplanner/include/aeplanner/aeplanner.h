@@ -1,6 +1,8 @@
 #ifndef AEPLANNER_H
 #define AEPLANNER_H
 
+#include <boost/shared_ptr.hpp>
+
 #include <ros/ros.h>
 
 #include <geometry_msgs/PoseStamped.h>
@@ -47,8 +49,8 @@ namespace aeplanner
       RRTNode * best_node_;
       RRTNode * best_branch_root_;
 
-      octomap::OcTree * ot_;
-      octomap::AbstractOcTree* aot_;
+      boost::shared_ptr<octomap::OcTree> new_ot_;
+      boost::shared_ptr<octomap::OcTree> ot_;
 
       // kd tree for finding nearest neighbours
       kdtree * kd_tree_;

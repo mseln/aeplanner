@@ -13,8 +13,8 @@ namespace aeplanner {
                                         child_it != node->children_.end(); ++child_it){
       RRTNode * child = (*child_it);
       if(child) recurse(child, marker_array, id, lambda);
-      marker_array->markers.push_back(createEdgeMarker(child, (*id), "map", lambda));
-      marker_array->markers.push_back(createNodeMarker(child, (*id)++, "map"));
+      marker_array->markers.push_back(createEdgeMarker(child, (*id), "world", lambda));
+      marker_array->markers.push_back(createNodeMarker(child, (*id)++, "world"));
     }
 
     visualization_msgs::MarkerArray m;

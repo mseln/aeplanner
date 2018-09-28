@@ -161,6 +161,12 @@ if(catkin_EXPORTED_LIBRARIES)
   add_dependencies(laserscan_to_pointcloud ${catkin_EXPORTED_LIBRARIES})
 endif()
 
+add_library(primesense_to_pointcloud src/primesense_to_pointcloud.cpp)
+target_link_libraries(primesense_to_pointcloud ${catkin_LIBRARIES})
+if(catkin_EXPORTED_LIBRARIES)
+  add_dependencies(primesense_to_pointcloud ${catkin_EXPORTED_LIBRARIES})
+endif()
+
 add_executable(fly_to src/fly_to.cpp)
 target_link_libraries( fly_to ${catkin_LIBRARIES})
 add_dependencies(fly_to rpl_exploration_generate_messages_cpp)
