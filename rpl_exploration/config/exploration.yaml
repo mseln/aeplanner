@@ -1,19 +1,19 @@
 camera/horizontal_fov: 56.0
 camera/vertical_fov: 42.0
 
-raycast/dr:     0.1
-raycast/dphi:   10
-raycast/dtheta: 10
+raycast/dr:     0.2
+raycast/dphi:   20
+raycast/dtheta: 20
 
 system/bbx/r: 0.50
 system/bbx/overshoot: 0.25
 
 aep/gain/r_min: 0
 aep/gain/r_max: 4
-aep/gain/zero: 16
-aep/gain/lambda: 1
+aep/gain/zero: 1
+aep/gain/lambda: 2
 aep/gain/sigma_thresh: 0.2
-aep/tree/extension_range: 1
+aep/tree/extension_range: 3
 aep/tree/max_sampling_radius: 10
 aep/tree/initial_iterations: 15
 aep/tree/cutoff_iterations: 30
@@ -22,8 +22,8 @@ rrt/min_nodes: 100
 
 # bounding box: necessary to limit the simulation 
 # scenario (smaller than actual gazebo scenario)
-boundary/min: [-10.0, -10.0,  0.0]
-boundary/max: [ 10.0,  10.0,  2.0]
+boundary/min: [-1.0, -24.0,  0.0]
+boundary/max: [ 30.0,  7.0,  26.0]
 
 visualize_rays: false
 visualize_tree: true

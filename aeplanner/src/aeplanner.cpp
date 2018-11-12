@@ -309,6 +309,9 @@ namespace aeplanner
 
           octomap::point3d query(vec[0], vec[1], vec[2]);
           octomap::OcTreeNode* result = ot_->search (query);
+
+          Eigen::Vector4d v(vec[0], vec[1], vec[2], 0);
+          if(!isInsideBoundaries(v)) break;
           if (result) 
           {
             // Break if occupied so we don't count any information gain behind a wall.

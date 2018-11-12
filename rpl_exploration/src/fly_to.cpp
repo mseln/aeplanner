@@ -81,7 +81,7 @@ namespace rpl_exploration {
           yaw_diff = fabs(atan2(sin(goal_yaw-current_yaw), cos(goal_yaw-current_yaw)));
 
           r.sleep();
-        } while(distance_to_goal > 0.6 or yaw_diff > 0.2*M_PI);
+        } while(distance_to_goal > 0.8 or yaw_diff > 0.6*M_PI);
 
 
         as->setSucceeded();

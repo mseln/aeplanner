@@ -1,4 +1,4 @@
-visualize/mean:  true
+visualize/mean:  false
 visualize/sigma: false
 visualize/pts:   true
 
