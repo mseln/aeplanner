@@ -9,14 +9,14 @@ system/bbx/r: 0.50
 system/bbx/overshoot: 0.25
 
 aep/gain/r_min: 0
-aep/gain/r_max: 4
-aep/gain/zero: 1
-aep/gain/lambda: 2
+aep/gain/r_max: 7
+aep/gain/zero: 32
+aep/gain/lambda: 0.5
 aep/gain/sigma_thresh: 0.2
 aep/tree/extension_range: 3
 aep/tree/max_sampling_radius: 10
-aep/tree/initial_iterations: 15
-aep/tree/cutoff_iterations: 30
+aep/tree/initial_iterations: 50
+aep/tree/cutoff_iterations: 50
 
 rrt/min_nodes: 100
 
