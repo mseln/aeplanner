@@ -59,7 +59,7 @@ class PIGain:
         self.y = None
         self.z = None
 
-        self.hyperparam = gp.HyperParam(l = 1, sigma_f = 1, sigma_n = 0.1)
+        self.hyperparam = gp.HyperParam(l = 4, sigma_f = 1, sigma_n = 0.1)
 
         # Create r-tree
         p = index.Property()
@@ -113,8 +113,8 @@ class PIGain:
 
     """ Handle query to Gaussian Process """
     def query_server(self, req):
-        bbx = (req.point.x-1, req.point.y-1, req.point.z-1, 
-               req.point.x+1, req.point.y+1, req.point.z+1)
+        bbx = (req.point.x-3, req.point.y-3, req.point.z-3, 
+               req.point.x+3, req.point.y+3, req.point.z+3)
         y = np.empty((0))
         x = np.empty((0,3))
         hits = self.idx.intersection(bbx, objects=True)
