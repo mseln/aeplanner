@@ -151,7 +151,7 @@ namespace aeplanner
         Eigen::Vector4d offset = sampleNewPoint();
         new_node->state_ = current_state_ + offset;
 
-        nearest = getNearestNeighbour(new_node);
+        nearest = chooseParent(new_node, params_.extension_range);
 
         new_node->state_ = restrictDistance(nearest->state_, new_node->state_);
 
@@ -211,17 +211,28 @@ namespace aeplanner
     return point;
   }
 
-  RRTNode * AEPlanner::getNearestNeighbour(RRTNode * node){
+  RRTNode * AEPlanner::chooseParent(RRTNode * node, double l){
     // Find nearest neighbour
-    kdres * nearest = kd_nearest3(kd_tree_, node->state_[0], node->state_[1], node->state_[2]);
+    kdres * nearest = kd_nearest_range3(kd_tree_, node->state_[0], node->state_[1], node->state_[2], l + 0.5);
+
 
     if (kd_res_size(nearest) <= 0) 
-      kd_res_free(nearest);
+      nearest = kd_nearest3(kd_tree_, node->state_[0], node->state_[1], node->state_[2]);
+    if (kd_res_size(nearest) <= 0) { kd_res_free(nearest); return NULL; }
 
-    RRTNode * nearest_node = (RRTNode *) kd_res_item_data(nearest);
+    RRTNode * node_nn = (RRTNode *) kd_res_item_data(nearest);
+
+    RRTNode * best_node = node_nn;
+    while( !kd_res_end( nearest ) ) {
+      node_nn = (RRTNode *) kd_res_item_data(nearest);
+      if(best_node and node_nn->cost() < best_node->cost())
+        best_node = node_nn;
+
+      kd_res_next( nearest );
+    }
+
     kd_res_free(nearest);
-
-    return nearest_node;
+    return best_node;
   }
 
   Eigen::Vector4d AEPlanner::restrictDistance(Eigen::Vector4d nearest, Eigen::Vector4d new_pos)

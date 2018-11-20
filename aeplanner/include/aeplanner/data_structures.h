@@ -62,6 +62,14 @@ namespace aeplanner
         return this->gain_;
     }
 
+    double cost()
+    {
+      if(this->parent_)
+        return this->distance(this->parent_) + this->parent_->cost();
+      else
+        return 0;
+    }
+
     double distance(RRTNode * other)
     {
       Eigen::Vector3d p3(this->state_[0],  this->state_[1],  this->state_[2]);

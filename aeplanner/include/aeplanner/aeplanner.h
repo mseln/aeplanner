@@ -80,13 +80,14 @@ namespace aeplanner
       Eigen::Vector4d sampleNewPoint();
       bool isInsideBoundaries(Eigen::Vector4d point);
       bool collisionLine(Eigen::Vector4d p1, Eigen::Vector4d p2, double r);
-      RRTNode * getNearestNeighbour(RRTNode * node);
+      RRTNode * chooseParent(RRTNode * node, double l);
       Eigen::Vector4d restrictDistance(Eigen::Vector4d nearest, Eigen::Vector4d new_pos);
 
       std::pair<double, double> getGain(RRTNode * node);
       std::pair<double, double> gainCubature(Eigen::Vector4d state);
 
       // ---------------- Helpers ----------------
+      //
       void publishEvaluatedNodesRecursive(RRTNode * node);
 
       double quaternionToYaw(geometry_msgs::Quaternion q);
