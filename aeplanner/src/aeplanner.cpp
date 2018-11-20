@@ -229,8 +229,8 @@ namespace aeplanner
       // Check for collision
       Eigen::Vector3d origin(nearest[0], nearest[1], nearest[2]);
       Eigen::Vector3d direction(new_pos[0] - origin[0], new_pos[1] - origin[1], new_pos[2] - origin[2]);
-      if (direction.norm() > params_.extension_range)
-        direction = params_.extension_range * direction.normalized();
+      // if (direction.norm() > params_.extension_range)
+      direction = params_.extension_range * direction.normalized();
 
       new_pos[0] = origin[0] + direction[0];
       new_pos[1] = origin[1] + direction[1];
