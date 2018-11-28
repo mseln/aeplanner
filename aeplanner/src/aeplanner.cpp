@@ -44,7 +44,12 @@ namespace aeplanner
     ROS_DEBUG("Init");
     RRTNode * root = initialize();
     ROS_DEBUG("expandRRT");
-    expandRRT();
+    ROS_WARN_STREAM(root->gain_ << " " << root->children_.size());
+    if(root->gain_ > 0.75 or !root->children_.size() or 
+        root->score(params_.lambda) < params_.zero_gain)
+      expandRRT();
+    else
+      best_node_ = root->children_[0];
 
     ROS_DEBUG("getCopyOfParent");
     best_branch_root_ = best_node_->getCopyOfParentBranch();
@@ -119,14 +124,14 @@ namespace aeplanner
 
   void AEPlanner::reevaluatePotentialInformationGainRecursive(RRTNode * node)
   {
-    ROS_DEBUG_STREAM("Reevaluating!!");
+    ROS_WARN_STREAM("Reevaluating!!");
     std::pair<double, double> ret = gainCubature(node->state_);
     node->state_[3]  = ret.second;  // Assign yaw angle that maximizes g
     node->gain_ = ret.first;
     for (typename std::vector<RRTNode *>::iterator node_it =  node->children_.begin();
                                                    node_it != node->children_.end(); ++node_it)
       reevaluatePotentialInformationGainRecursive(*node_it);
-    ROS_DEBUG_STREAM("Reevaluating done!!");
+    ROS_WARN_STREAM("Reevaluating done!!");
   }
 
   void AEPlanner::expandRRT()
@@ -241,7 +246,8 @@ namespace aeplanner
       Eigen::Vector3d origin(nearest[0], nearest[1], nearest[2]);
       Eigen::Vector3d direction(new_pos[0] - origin[0], new_pos[1] - origin[1], new_pos[2] - origin[2]);
       // if (direction.norm() > params_.extension_range)
-      direction = params_.extension_range * direction.normalized();
+      if (direction.norm() > params_.extension_range)
+        direction = params_.extension_range * direction.normalized();
 
       new_pos[0] = origin[0] + direction[0];
       new_pos[1] = origin[1] + direction[1];
@@ -358,7 +364,12 @@ namespace aeplanner
       }
     }
 
-    gain = best_yaw_score; 
+    double r_max = params_.r_max;
+    double h_max = params_.hfov / M_PI * 180;
+    double v_max = params_.vfov / M_PI * 180;
+
+    gain = best_yaw_score / 250; // / ((r_max*r_max*r_max/3) * h_max * (1-cos(v_max))) ; 
+    // ROS_ERROR_STREAM(gain);
 
     double yaw = M_PI*best_yaw/180.f;
 
@@ -370,7 +381,7 @@ namespace aeplanner
     geometry_msgs::PoseArray frontiers;
 
     pigain::BestNode srv;
-    srv.request.threshold = 12.0;
+    srv.request.threshold = 0.80;
     if(best_node_client_.call(srv)){
       for(int i = 0; i < srv.response.best_node.size(); ++i){
         geometry_msgs::Pose frontier;
