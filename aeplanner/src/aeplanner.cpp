@@ -24,6 +24,7 @@ namespace aeplanner
 
   void AEPlanner::execute(const aeplanner::aeplannerGoalConstPtr& goal)
   {
+    ROS_ERROR_STREAM("Execute start!");
     aeplanner::aeplannerResult result;
 
     // Check if aeplanner has recieved agent's pose yet
@@ -76,6 +77,7 @@ namespace aeplanner
     delete root;
     kd_free(kd_tree_);
     ROS_DEBUG("Done!");
+    ROS_ERROR_STREAM("Execute done!");
   }
 
   RRTNode * AEPlanner::initialize()
@@ -173,6 +175,7 @@ namespace aeplanner
               !ot_result or
               collisionLine(nearest->state_, new_node->state_, params_.bounding_radius));
 
+
       ROS_DEBUG_STREAM("New node (" <<
             new_node->state_[0] << ", " <<
             new_node->state_[1] << ", " <<
@@ -181,6 +184,9 @@ namespace aeplanner
       // new_node is now ready to be added to tree
       new_node->parent_ = nearest;
       nearest->children_.push_back(new_node);
+
+      // rewire tree with new node
+      rewire(kd_tree_, nearest, params_.extension_range, params_.bounding_radius, params_.d_overshoot_);
 
       // Calculate potential information gain for new_node
       ROS_DEBUG_STREAM("Get gain");
@@ -238,6 +244,21 @@ namespace aeplanner
 
     kd_res_free(nearest);
     return best_node;
+  }
+
+  void AEPlanner::rewire(kdtree * kd_tree, RRTNode * new_node, double l, double r, double r_os){
+    RRTNode * node_nn;
+    kdres * nearest = kd_nearest_range3(kd_tree, new_node->state_[0], new_node->state_[1], new_node->state_[2], l + 0.5);
+    while( !kd_res_end( nearest ) ) {
+      node_nn = (RRTNode *) kd_res_item_data(nearest);
+      Eigen::Vector3d p1(new_node->state_[0], new_node->state_[1], new_node->state_[2]);
+      Eigen::Vector3d p2(node_nn->state_[0], node_nn->state_[1], node_nn->state_[2]);
+      if(node_nn->cost() > new_node->cost() + (p1 - p2).norm()){
+        if(!collisionLine(new_node->state_, node_nn->state_, r))
+          node_nn->parent_ = new_node;
+      }
+      kd_res_next( nearest );
+    }
   }
 
   Eigen::Vector4d AEPlanner::restrictDistance(Eigen::Vector4d nearest, Eigen::Vector4d new_pos)

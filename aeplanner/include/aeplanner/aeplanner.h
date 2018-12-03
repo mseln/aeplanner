@@ -81,6 +81,7 @@ namespace aeplanner
       bool isInsideBoundaries(Eigen::Vector4d point);
       bool collisionLine(Eigen::Vector4d p1, Eigen::Vector4d p2, double r);
       RRTNode * chooseParent(RRTNode * node, double l);
+      void rewire(kdtree * kd_tree, RRTNode * new_node, double l, double r, double r_os);
       Eigen::Vector4d restrictDistance(Eigen::Vector4d nearest, Eigen::Vector4d new_pos);
 
       std::pair<double, double> getGain(RRTNode * node);
