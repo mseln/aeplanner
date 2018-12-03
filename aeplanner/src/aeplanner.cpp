@@ -402,7 +402,7 @@ namespace aeplanner
     geometry_msgs::PoseArray frontiers;
 
     pigain::BestNode srv;
-    srv.request.threshold = 0.80;
+    srv.request.threshold = 0.675;
     if(best_node_client_.call(srv)){
       for(int i = 0; i < srv.response.best_node.size(); ++i){
         geometry_msgs::Pose frontier;

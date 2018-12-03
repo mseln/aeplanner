@@ -48,7 +48,7 @@ class PIGain:
             self.max = [ 100,  100, 3]
 
         try:
-            self.range = 2*rospy.get_param('aep/gain/r_max')
+            self.range = rospy.get_param('aep/gain/r_max')
         except KeyError:
             rospy.logwarn("Range max parameter not specified")
             rospy.logwarn("Defaulting to 8 m...")
@@ -113,8 +113,8 @@ class PIGain:
 
     """ Handle query to Gaussian Process """
     def query_server(self, req):
-        bbx = (req.point.x-3, req.point.y-3, req.point.z-3, 
-               req.point.x+3, req.point.y+3, req.point.z+3)
+        bbx = (req.point.x-2, req.point.y-2, req.point.z-2, 
+               req.point.x+2, req.point.y+2, req.point.z+2)
         y = np.empty((0))
         x = np.empty((0,3))
         hits = self.idx.intersection(bbx, objects=True)

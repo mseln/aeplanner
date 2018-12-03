@@ -183,7 +183,7 @@ namespace aeplanner_ns{
     Eigen::Vector3d * g_nn = (Eigen::Vector3d *) kd_res_item_data(nearest_goal); 
     kd_res_free(nearest_goal);
 
-    if((*g_nn - new_node->pos).norm() < 2*l)
+    if((*g_nn - new_node->pos).norm() < 1)
       if(!collisionLine(new_node->pos, *g_nn + (*g_nn - new_node->pos).normalized()*r_os, r))
         return new_node;
 
@@ -530,7 +530,7 @@ namespace aeplanner_ns{
       a.color.g = 0.3;
       a.color.b = 0.7;
       a.color.a = 1;
-      a.lifetime = ros::Duration(15.0);
+      a.lifetime = ros::Duration(100.0);
       a.frame_locked = false;
       path_pub_.publish(a);
     }
