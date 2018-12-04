@@ -436,7 +436,8 @@ namespace aeplanner
     for(octomap::OcTree::leaf_bbx_iterator it  = ot_->begin_leafs_bbx(min, max);
                                            it != ot_->end_leafs_bbx(); ++it)
     {
-      
+      // ROS_ERROR_STREAM(it.getZ() << " " << p2[2] << " " << it.getZ() - p2[2]);
+      // if(p[2] it.getZ() < -0.3) continue;
       octomap::point3d pt(it.getX(), it.getY(), it.getZ());
 
       if(it->getLogOdds() > 0 ) // Node is occupied

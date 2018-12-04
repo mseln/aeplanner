@@ -183,7 +183,7 @@ namespace aeplanner_ns{
     Eigen::Vector3d * g_nn = (Eigen::Vector3d *) kd_res_item_data(nearest_goal); 
     kd_res_free(nearest_goal);
 
-    if((*g_nn - new_node->pos).norm() < 1)
+    if((*g_nn - new_node->pos).norm() < 1.5)
       if(!collisionLine(new_node->pos, *g_nn + (*g_nn - new_node->pos).normalized()*r_os, r))
         return new_node;
 
