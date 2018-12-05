@@ -68,7 +68,7 @@ namespace aeplanner_ns{
     visualizeNode(goal->start.position, 1000);
     visualizeGoals(goal->goal_poses);
 
-    for(int i = 0; i < N or !found_goals.size(); ++i){
+    for(int i = 0; i < N /* or !found_goals.size() */; ++i){
       // Sample new position
       Eigen::Vector3d z_samp = sample();
 
