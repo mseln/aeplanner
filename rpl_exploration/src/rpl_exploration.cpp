@@ -5,7 +5,6 @@
 #include <tf/tf.h>
 
 #include <std_srvs/Empty.h>
-#include <aeplanner_evaluation/Coverage.h>
 
 #include <actionlib/client/simple_action_client.h>
 #include <rpl_exploration/FlyToAction.h>
@@ -28,7 +27,6 @@ int main(int argc, char** argv)
   pathfile.open (path + "/data/path.csv");
 
   ros::Publisher pub(nh.advertise<geometry_msgs::PoseStamped>("/mavros/setpoint_position/local", 1000));
-  ros::ServiceClient coverage_srv = nh.serviceClient<aeplanner_evaluation::Coverage>("/get_coverage");
 
   // wait for fly_to server to start
   // ROS_INFO("Waiting for fly_to action server");
@@ -159,21 +157,13 @@ int main(int argc, char** argv)
 
     ros::Duration elapsed = ros::Time::now() - start;
 
-    aeplanner_evaluation::Coverage srv;
-    if(!coverage_srv.call(srv)) { ROS_ERROR("Failed to call coverage service"); }
-
     ROS_INFO_STREAM("Iteration: "       << iteration << "  " <<
                     "Time: "            << elapsed << "  " <<
                     "Sampling: "        << aep_ac.getResult()->sampling_time.data << "  " <<
                     "Planning: "        << aep_ac.getResult()->planning_time.data << "  " <<
                     "Collision check: " << aep_ac.getResult()->collision_check_time.data  << "  " <<
                     "Flying: "          << fly_time << " " <<
-                    "Tree size: "       << aep_ac.getResult()->tree_size  << " " <<
-                    "Coverage: "        << srv.response.coverage << " " <<
-                    "F:     "           << srv.response.free << " " <<
-                    "O: "               << srv.response.occupied << " " <<
-                    "U: "               << srv.response.unmapped 
-                    );
+                    "Tree size: "       << aep_ac.getResult()->tree_size);
 
     logfile << iteration << ", " 
             << elapsed << ", "
@@ -181,10 +171,6 @@ int main(int argc, char** argv)
             << aep_ac.getResult()->planning_time.data << ", "
             << aep_ac.getResult()->collision_check_time.data << ", "
             << fly_time << ", "
-            << srv.response.coverage << ", "
-            << srv.response.free << ", "
-            << srv.response.occupied << ", "            
-            << srv.response.unmapped << ", "
             << aep_ac.getResult()->tree_size << std::endl;
             
     iteration++;

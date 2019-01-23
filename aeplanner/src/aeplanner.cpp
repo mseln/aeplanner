@@ -22,7 +22,6 @@ AEPlanner::AEPlanner(const ros::NodeHandle &nh) : nh_(nh),
 
 void AEPlanner::execute(const aeplanner::aeplannerGoalConstPtr &goal)
 {
-  ROS_ERROR_STREAM("Execute start!");
   aeplanner::aeplannerResult result;
 
   // Check if aeplanner has recieved agent's pose yet
@@ -43,7 +42,6 @@ void AEPlanner::execute(const aeplanner::aeplannerGoalConstPtr &goal)
   ROS_DEBUG("Init");
   RRTNode *root = initialize();
   ROS_DEBUG("expandRRT");
-  ROS_WARN_STREAM(root->gain_ << " " << root->children_.size());
   if (root->gain_ > 0.75 or !root->children_.size() or
       root->score(params_.lambda) < params_.zero_gain)
     expandRRT();
@@ -75,7 +73,6 @@ void AEPlanner::execute(const aeplanner::aeplannerGoalConstPtr &goal)
   delete root;
   kd_free(kd_tree_);
   ROS_DEBUG("Done!");
-  ROS_ERROR_STREAM("Execute done!");
 }
 
 RRTNode *AEPlanner::initialize()
@@ -124,14 +121,12 @@ void AEPlanner::initializeKDTreeWithPreviousBestBranch(RRTNode *root)
 
 void AEPlanner::reevaluatePotentialInformationGainRecursive(RRTNode *node)
 {
-  ROS_WARN_STREAM("Reevaluating!!");
   std::pair<double, double> ret = gainCubature(node->state_);
   node->state_[3] = ret.second; // Assign yaw angle that maximizes g
   node->gain_ = ret.first;
   for (typename std::vector<RRTNode *>::iterator node_it = node->children_.begin();
        node_it != node->children_.end(); ++node_it)
     reevaluatePotentialInformationGainRecursive(*node_it);
-  ROS_WARN_STREAM("Reevaluating done!!");
 }
 
 void AEPlanner::expandRRT()
