@@ -31,85 +31,84 @@
 
 namespace aeplanner
 {
-  class AEPlanner
-  {
-    private:
-      ros::NodeHandle nh_;
-      actionlib::SimpleActionServer<aeplanner::aeplannerAction> as_;
+class AEPlanner
+{
+private:
+  ros::NodeHandle nh_;
+  actionlib::SimpleActionServer<aeplanner::aeplannerAction> as_;
 
-      Params params_;
+  Params params_;
 
-      // Current state of agent (x, y, z, yaw)
-      Eigen::Vector4d current_state_;
-      bool current_state_initialized_;
+  // Current state of agent (x, y, z, yaw)
+  Eigen::Vector4d current_state_;
+  bool current_state_initialized_;
 
-      // Keep track of the best node and its score
-      RRTNode * best_node_;
-      RRTNode * best_branch_root_;
+  // Keep track of the best node and its score
+  RRTNode *best_node_;
+  RRTNode *best_branch_root_;
 
-      octomap::OcTree * ot_;
-      octomap::AbstractOcTree* aot_;
+  std::shared_ptr<octomap::OcTree> ot_;
 
-      // kd tree for finding nearest neighbours
-      kdtree * kd_tree_;
+  // kd tree for finding nearest neighbours
+  kdtree *kd_tree_;
 
-      // Subscribers
-      ros::Subscriber octomap_sub_;
-      ros::Subscriber agent_pose_sub_;
+  // Subscribers
+  ros::Subscriber octomap_sub_;
+  ros::Subscriber agent_pose_sub_;
 
-      // Publishers
-      ros::Publisher rrt_marker_pub_;
-      ros::Publisher gain_pub_; 
+  // Publishers
+  ros::Publisher rrt_marker_pub_;
+  ros::Publisher gain_pub_;
 
-      // Services
-      ros::ServiceClient best_node_client_;
-      ros::ServiceClient gp_query_client_;
-      ros::ServiceServer reevaluate_server_;
+  // Services
+  ros::ServiceClient best_node_client_;
+  ros::ServiceClient gp_query_client_;
+  ros::ServiceServer reevaluate_server_;
 
-      // Service server callback
-      bool reevaluate(aeplanner::Reevaluate::Request  &req, aeplanner::Reevaluate::Response &res);
+  // Service server callback
+  bool reevaluate(aeplanner::Reevaluate::Request &req, aeplanner::Reevaluate::Response &res);
 
-      // ---------------- Initialization ----------------
-      RRTNode * initialize();
-      void initializeKDTreeWithPreviousBestBranch(RRTNode * root);
-      void reevaluatePotentialInformationGainRecursive(RRTNode * node);
+  // ---------------- Initialization ----------------
+  RRTNode *initialize();
+  void initializeKDTreeWithPreviousBestBranch(RRTNode *root);
+  void reevaluatePotentialInformationGainRecursive(RRTNode *node);
 
-      // ---------------- Expand RRT Tree ----------------
-      void expandRRT();
-      
-      Eigen::Vector4d sampleNewPoint();
-      bool isInsideBoundaries(Eigen::Vector4d point);
-      bool collisionLine(Eigen::Vector4d p1, Eigen::Vector4d p2, double r);
-      RRTNode * chooseParent(RRTNode * node, double l);
-      void rewire(kdtree * kd_tree, RRTNode * new_node, double l, double r, double r_os);
-      Eigen::Vector4d restrictDistance(Eigen::Vector4d nearest, Eigen::Vector4d new_pos);
+  // ---------------- Expand RRT Tree ----------------
+  void expandRRT();
 
-      std::pair<double, double> getGain(RRTNode * node);
-      std::pair<double, double> gainCubature(Eigen::Vector4d state);
+  Eigen::Vector4d sampleNewPoint();
+  bool isInsideBoundaries(Eigen::Vector4d point);
+  bool collisionLine(Eigen::Vector4d p1, Eigen::Vector4d p2, double r);
+  RRTNode *chooseParent(RRTNode *node, double l);
+  void rewire(kdtree *kd_tree, RRTNode *new_node, double l, double r, double r_os);
+  Eigen::Vector4d restrictDistance(Eigen::Vector4d nearest, Eigen::Vector4d new_pos);
 
-      // ---------------- Helpers ----------------
-      //
-      void publishEvaluatedNodesRecursive(RRTNode * node);
+  std::pair<double, double> getGain(RRTNode *node);
+  std::pair<double, double> gainCubature(Eigen::Vector4d state);
 
-      double quaternionToYaw(geometry_msgs::Quaternion q);
-      geometry_msgs::Pose vecToPose(Eigen::Vector4d state);
+  // ---------------- Helpers ----------------
+  //
+  void publishEvaluatedNodesRecursive(RRTNode *node);
 
-      float CylTest_CapsFirst( const octomap::point3d & pt1, 
-                               const octomap::point3d & pt2, 
-                               float lsq, float rsq, const octomap::point3d & pt );
+  double quaternionToYaw(geometry_msgs::Quaternion q);
+  geometry_msgs::Pose vecToPose(Eigen::Vector4d state);
 
-      // ---------------- Frontier ----------------
-      geometry_msgs::PoseArray  getFrontiers();
+  float CylTest_CapsFirst(const octomap::point3d &pt1,
+                          const octomap::point3d &pt2,
+                          float lsq, float rsq, const octomap::point3d &pt);
 
-    public:
-      AEPlanner(const ros::NodeHandle& nh);
+  // ---------------- Frontier ----------------
+  geometry_msgs::PoseArray getFrontiers();
 
-      void execute(const aeplanner::aeplannerGoalConstPtr& goal);
+public:
+  AEPlanner(const ros::NodeHandle &nh);
 
-      void octomapCallback(const octomap_msgs::Octomap& msg);
-      void agentPoseCallback(const geometry_msgs::PoseStamped& msg);
-  };
+  void execute(const aeplanner::aeplannerGoalConstPtr &goal);
 
-}
+  void octomapCallback(const octomap_msgs::Octomap &msg);
+  void agentPoseCallback(const geometry_msgs::PoseStamped &msg);
+};
+
+} // namespace aeplanner
 
 #endif
