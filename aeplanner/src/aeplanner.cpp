@@ -477,6 +477,8 @@ void AEPlanner::octomapCallback(const octomap_msgs::Octomap &msg)
   octomap::AbstractOcTree *aot = octomap_msgs::msgToMap(msg);
   octomap::OcTree *ot = (octomap::OcTree *)aot;
   ot_ = std::make_shared<octomap::OcTree>(*ot);
+
+  delete ot;
   ROS_DEBUG_STREAM("Freeing ot_ done:");
 }
 
