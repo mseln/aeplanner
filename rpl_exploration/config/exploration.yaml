@@ -5,16 +5,16 @@ raycast/dr:     0.2
 raycast/dphi:   45
 raycast/dtheta: 45
 
-system/bbx/r: 0.5
+system/bbx/r: 0.75
 system/bbx/overshoot: 0.25
 
-aep/gain/r_min: 0
-aep/gain/r_max: 7
-aep/gain/zero: 0.50
-aep/gain/lambda: 0.75
+aep/gain/r_min: 0.0
+aep/gain/r_max: 5.0
+aep/gain/zero: 0.25
+aep/gain/lambda: 0.5
 aep/gain/sigma_thresh: 0.2
-aep/tree/extension_range: 3
-aep/tree/max_sampling_radius: 7.5
+aep/tree/extension_range: 1
+aep/tree/max_sampling_radius: 10
 aep/tree/initial_iterations: 50
 aep/tree/cutoff_iterations: 200
 
@@ -22,10 +22,8 @@ rrt/min_nodes: 1000
 
 # bounding box: necessary to limit the simulation 
 # scenario (smaller than actual gazebo scenario)
-boundary/min: [-1.0, -24.0, -4.0]
-boundary/max: [ 30.0,  7.0,  26.0]
-# boundary/min: [-30.0, -30.0,  0.0]
-# boundary/max: [ 30.0,  30.0,  30.0]
+boundary/min: [-30.0, -30.0, 0.0]
+boundary/max: [ 30.0,  30.0, 3.0]
 
 visualize_rays: false
 visualize_tree: true

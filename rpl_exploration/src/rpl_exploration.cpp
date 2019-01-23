@@ -52,8 +52,8 @@ int main(int argc, char** argv)
   ros::Duration(5.0).sleep();
 
   double initial_positions[8][4] = {
-    { 0,  0, 5.0,  0},
-    { 1.0,  0, 5.0,  0},
+    { 0,  0, 1.5,  0},
+    { 1.0,  0, 1.5,  0},
   };
 
   // This is the initialization motion, necessary that the known free space allows the planning
