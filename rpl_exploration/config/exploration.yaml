@@ -23,7 +23,7 @@ rrt/min_nodes: 1000
 # bounding box: necessary to limit the simulation 
 # scenario (smaller than actual gazebo scenario)
 boundary/min: [-1.0, -24.0, -4.0]
-boundary/max: [ 30.0,  7.0,  26.0]
+boundary/max: [ 30.0,  7.0,  3.0]
 # boundary/min: [-30.0, -30.0,  0.0]
 # boundary/max: [ 30.0,  30.0,  30.0]
 
