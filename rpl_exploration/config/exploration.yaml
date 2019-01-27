@@ -10,7 +10,7 @@ system/bbx/overshoot: 0.25
 
 aep/gain/r_min: 0
 aep/gain/r_max: 7
-aep/gain/zero: 32
+aep/gain/zero: 0.1
 aep/gain/lambda: 0.5
 aep/gain/sigma_thresh: 0.2
 aep/tree/extension_range: 3
@@ -22,8 +22,8 @@ rrt/min_nodes: 100
 
 # bounding box: necessary to limit the simulation 
 # scenario (smaller than actual gazebo scenario)
-boundary/min: [-1.0, -24.0,  0.0]
-boundary/max: [ 30.0,  7.0,  26.0]
+boundary/min: [-20.0, -20.0,  0.0]
+boundary/max: [ 20.0, 20.0,  2.0]
 
 visualize_rays: false
 visualize_tree: true

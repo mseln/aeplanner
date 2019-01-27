@@ -90,7 +90,7 @@ class PIGain:
         reevaluate_list = []
         reevaluate_position_list = []
         for item in hits:
-            if(item.object.gain > 1):
+            if(item.object.gain > 0.05):
                 reevaluate_position_list.append(item.object.position)
                 reevaluate_list.append(item)
         try:
@@ -184,7 +184,7 @@ class PIGain:
         mean_markers = MarkerArray()
         sigma_markers = MarkerArray()
         for id, pts in enumerate(zip(xstar, mean, sigma)):
-            mean_markers.markers.append(self.np_array_to_marker(id, pts[0], pts[1] / 16, max(1-pts[2], 0)))
+            mean_markers.markers.append(self.np_array_to_marker(id, pts[0], pts[1], max(1-pts[2], 0)))
             # sigma_markers.markers.append(self.np_array_to_marker(id, pts[0], pts[2] * 2))
         
         self.mean_pub.publish(mean_markers)
@@ -231,7 +231,7 @@ class PIGain:
         marker.scale.x = 0.4
         marker.scale.y = 0.4
         marker.scale.z = 0.4
-        marker.color.r = node.gain / 16
+        marker.color.r = node.gain
         marker.color.g = 0.0
         marker.color.b = 0.5
         marker.color.a = 1.0

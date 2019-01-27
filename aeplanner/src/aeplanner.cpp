@@ -330,7 +330,8 @@ namespace aeplanner
               break;
           }
           else 
-            g += (2*r*r*dr + 1/6*dr*dr*dr) * dtheta_rad * sin(phi_rad) * sin(dphi_rad/2);
+            g += (2*r*r*dr + 1/6*dr*dr*dr) * dtheta_rad * sin(phi_rad) * sin(dphi_rad/2) / 4.0;
+          // / 4.0 ?
         }
 
         gain += g; 
@@ -358,7 +359,18 @@ namespace aeplanner
       }
     }
 
-    gain = best_yaw_score; 
+    ROS_ERROR_STREAM("Gain before is " << best_yaw_score);
+    double rm = params_.r_max;
+    double t = fov_y * M_PI / 180.0;
+    double p = fov_p * M_PI / 180.0;
+    double normalization_constant = t * rm*rm*rm / 3 * (1 - cos(p));
+    ROS_ERROR_STREAM("Normalization constant " << normalization_constant <<
+                    " " << fov_y << 
+                    " " << fov_p << 
+                    " " << params_.r_max
+                    );
+    gain = best_yaw_score / normalization_constant; 
+    ROS_ERROR_STREAM("Gain after is " << gain);
 
     double yaw = M_PI*best_yaw/180.f;
 
