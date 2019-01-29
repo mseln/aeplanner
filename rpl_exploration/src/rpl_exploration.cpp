@@ -54,7 +54,6 @@ int main(int argc, char **argv)
   // Get current pose
   geometry_msgs::PoseStamped::ConstPtr init_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("/mavros/local_position/pose");
   double init_yaw = tf2::getYaw(init_pose->pose.orientation);
-  ROS_ERROR_STREAM("YAW: " << init_yaw);
   // Up 2 meters and then forward one meter
   double initial_positions[8][4] = {
       {init_pose->pose.position.x, init_pose->pose.position.y, init_pose->pose.position.z + 2.0, init_yaw},
