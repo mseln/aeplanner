@@ -136,6 +136,7 @@ int main(int argc, char **argv)
 
         rrt_goal.goal_poses.poses.push_back(*it);
       }
+
       rrt_ac.sendGoal(rrt_goal);
       while (!rrt_ac.waitForResult(ros::Duration(0.05)))
       {

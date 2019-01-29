@@ -218,6 +218,11 @@ RrtNode *Rrt::getGoal(kdtree *goal_tree, RrtNode *new_node, double l, double r, 
 nav_msgs::Path Rrt::getBestPath(std::vector<RrtNode *> goals)
 {
   nav_msgs::Path path;
+  if (goals.size() == 0)
+  {
+    return path;
+  }
+
   RrtNode *best_node = goals[0];
 
   for (int i = 0; i < goals.size(); ++i)
