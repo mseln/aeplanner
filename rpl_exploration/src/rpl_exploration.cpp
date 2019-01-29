@@ -54,10 +54,11 @@ int main(int argc, char **argv)
   // Get current pose
   geometry_msgs::PoseStamped::ConstPtr init_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("/mavros/local_position/pose");
   double init_yaw = tf2::getYaw(init_pose->pose.orientation);
+  ROS_ERROR_STREAM("YAW: " << init_yaw);
   // Up 2 meters and then forward one meter
   double initial_positions[8][4] = {
       {init_pose->pose.position.x, init_pose->pose.position.y, init_pose->pose.position.z + 2.0, init_yaw},
-      {init_pose->pose.position.x + 1.0 * std::cos(init_yaw), init_pose->pose.position.y + 1.0 * std::cos(init_yaw), init_pose->pose.position.z + 2.0, init_yaw},
+      {init_pose->pose.position.x + 1.0 * std::cos(init_yaw), init_pose->pose.position.y + 1.0 * std::sin(init_yaw), init_pose->pose.position.z + 2.0, init_yaw},
   };
 
   // This is the initialization motion, necessary that the known free space allows the planning
@@ -77,7 +78,7 @@ int main(int argc, char **argv)
     ROS_INFO_STREAM("Sending initial goal...");
     ac.sendGoal(goal);
 
-    ros::Duration(3.0).sleep();
+    ac.waitForResult(ros::Duration(0));
   }
 
   // Start planning: The planner is called and the computed path sent to the controller.
@@ -95,9 +96,8 @@ int main(int argc, char **argv)
     aep_goal.actions_taken = actions_taken;
     aep_ac.sendGoal(aep_goal);
 
-    while (aep_ac.getState() != actionlib::SimpleClientGoalState::SUCCEEDED && ros::ok())
+    while (!aep_ac.waitForResult(ros::Duration(0.05)))
     {
-      ros::Duration(0.05).sleep();
       pub.publish(last_pose);
     }
 
@@ -138,9 +138,8 @@ int main(int argc, char **argv)
         rrt_goal.goal_poses.poses.push_back(*it);
       }
       rrt_ac.sendGoal(rrt_goal);
-      while (rrt_ac.getState() != actionlib::SimpleClientGoalState::SUCCEEDED && ros::ok())
+      while (!rrt_ac.waitForResult(ros::Duration(0.05)))
       {
-        ros::Duration(0.05).sleep();
         pub.publish(last_pose);
       }
       nav_msgs::Path path = rrt_ac.getResult()->path;
