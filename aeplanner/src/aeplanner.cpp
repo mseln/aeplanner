@@ -84,7 +84,7 @@ RRTNode *AEPlanner::initialize()
   // Initialize kd-tree
   kd_tree_ = kd_create(3);
   best_node_ = NULL;
-  RRTNode *root = new RRTNode();
+  RRTNode *root = NULL;
 
   if (best_branch_root_)
   {
