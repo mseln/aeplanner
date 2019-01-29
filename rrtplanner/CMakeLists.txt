@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(rrtplanner)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
 
   kdtree
+  nav_msgs
 )
 find_package(octomap REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -80,6 +81,7 @@ generate_messages(
   geometry_msgs
   visualization_msgs
   actionlib_msgs
+  nav_msgs
 )
 
 ################################################

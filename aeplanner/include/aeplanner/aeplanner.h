@@ -90,7 +90,6 @@ private:
   //
   void publishEvaluatedNodesRecursive(RRTNode *node);
 
-  double quaternionToYaw(geometry_msgs::Quaternion q);
   geometry_msgs::Pose vecToPose(Eigen::Vector4d state);
 
   float CylTest_CapsFirst(const octomap::point3d &pt1,

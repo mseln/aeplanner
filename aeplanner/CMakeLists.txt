@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   message_generation
   tf
+  tf2
   genmsg 
   actionlib_msgs 
   actionlib

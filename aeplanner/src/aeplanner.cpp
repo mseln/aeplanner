@@ -1,4 +1,5 @@
 #include <aeplanner/aeplanner.h>
+#include <tf2/utils.h>
 
 namespace aeplanner
 {
@@ -59,13 +60,13 @@ void AEPlanner::execute(const aeplanner::aeplannerGoalConstPtr &goal)
   publishEvaluatedNodesRecursive(root);
 
   ROS_DEBUG("extractPose");
-  result.pose = vecToPose(best_branch_root_->children_[0]->state_);
+  result.pose.pose = vecToPose(best_branch_root_->children_[0]->state_);
   if (best_node_->score(params_.lambda) > params_.zero_gain)
-    result.clear.data = true;
+    result.is_clear = true;
   else
   {
     result.frontiers = getFrontiers();
-    result.clear.data = false;
+    result.is_clear = false;
     delete best_branch_root_;
     best_branch_root_ = NULL;
   }
@@ -509,18 +510,9 @@ void AEPlanner::agentPoseCallback(const geometry_msgs::PoseStamped &msg)
   current_state_[0] = msg.pose.position.x;
   current_state_[1] = msg.pose.position.y;
   current_state_[2] = msg.pose.position.z;
-  current_state_[3] = quaternionToYaw(msg.pose.orientation);
+  current_state_[3] = tf2::getYaw(msg.pose.orientation);
 
   current_state_initialized_ = true;
-}
-
-double AEPlanner::quaternionToYaw(geometry_msgs::Quaternion q)
-{
-  tf::Quaternion tf_q(q.x, q.y, q.z, q.w);
-  tf::Matrix3x3 m(tf_q);
-  double r, p, y;
-  m.getRPY(r, p, y);
-  return y;
 }
 
 geometry_msgs::Pose AEPlanner::vecToPose(Eigen::Vector4d state)
