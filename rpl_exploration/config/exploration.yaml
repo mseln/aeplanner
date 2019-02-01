@@ -5,7 +5,7 @@ raycast/dr:     0.1
 raycast/dphi:   10
 raycast/dtheta: 10
 
-system/bbx/r: 0.70
+system/bbx/r: 0.5
 system/bbx/overshoot: 0.25
 
 aep/gain/r_min: 0
