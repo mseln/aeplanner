@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 
   kdtree
   pigain
+  dynamic_reconfigure
 )
 find_package(cmake_modules REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -42,6 +43,11 @@ generate_messages(
   actionlib_msgs
 )
 
+## Generate dynamic reconfigure parameters in the 'cfg' folder
+generate_dynamic_reconfigure_options(
+  cfg/LTL.cfg
+)
+
 catkin_package(
   INCLUDE_DIRS include ${Eigen_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS}
   LIBRARIES aeplanner ${catkin_LIBRARIES} ${OCTOMAP_LIBRARIES}
@@ -64,6 +70,7 @@ add_dependencies(aeplanner
   ${catkin_EXPORTED_TARGETS} 
   ${${PROJECT_NAME}_EXPORTED_TARGETS} 
   aeplanner_ref_generate_messages_cpp
+  ${PROJECT_NAME}_gencfg
 )
 
 add_executable(aeplanner_node src/aeplanner_node.cpp src/aeplanner.cpp src/aeplanner_viz.cpp src/param.cpp)
@@ -75,4 +82,5 @@ add_dependencies(aeplanner_node
   ${catkin_EXPORTED_TARGETS} 
   ${${PROJECT_NAME}_EXPORTED_TARGETS} 
   aeplanner_ref_generate_messages_cpp
+  ${PROJECT_NAME}_gencfg
 )

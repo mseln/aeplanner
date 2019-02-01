@@ -21,6 +21,7 @@
   <build_depend>visualization_msgs</build_depend>
   <build_depend>kdtree</build_depend>
   <build_depend>pigain</build_depend>
+  <build_depend>dynamic_reconfigure</build_depend>
   
   <run_depend>roscpp</run_depend>
   <run_depend>nodelet</run_depend>
@@ -31,6 +32,7 @@
   <run_depend>visualization_msgs</run_depend>
   <run_depend>kdtree</run_depend>
   <run_depend>pigain</run_depend>
+  <run_depend>dynamic_reconfigure</run_depend>
 
   <export>
     <nodelet plugin="${prefix}/nodelet_plugins.xml" />
