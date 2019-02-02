@@ -48,7 +48,7 @@ class PIGain:
             self.max = [ 100,  100, 3]
 
         try:
-            self.range = rospy.get_param('aep/gain/r_max')
+            self.range = rospy.get_param('aep/gain/r_max') * 2
         except KeyError:
             rospy.logwarn("Range max parameter not specified")
             rospy.logwarn("Defaulting to 8 m...")
@@ -59,7 +59,7 @@ class PIGain:
         self.y = None
         self.z = None
 
-        self.hyperparam = gp.HyperParam(l = 4, sigma_f = 1, sigma_n = 0.1)
+        self.hyperparam = gp.HyperParam(l = 1, sigma_f = 1, sigma_n = 0.1)
 
         # Create r-tree
         p = index.Property()

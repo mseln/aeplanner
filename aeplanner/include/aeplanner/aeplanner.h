@@ -29,6 +29,9 @@
 #include <pigain/Query.h>
 #include <pigain/BestNode.h>
 
+#include <dynamic_reconfigure/server.h>
+#include <nav_msgs/Path.h>
+
 namespace aeplanner
 {
 class AEPlanner
@@ -44,13 +47,13 @@ private:
   bool current_state_initialized_;
 
   // Keep track of the best node and its score
-  RRTNode *best_node_;
-  RRTNode *best_branch_root_;
+  RRTNode* best_node_;
+  RRTNode* best_branch_root_;
 
   std::shared_ptr<octomap::OcTree> ot_;
 
   // kd tree for finding nearest neighbours
-  kdtree *kd_tree_;
+  kdtree* kd_tree_;
 
   // Subscribers
   ros::Subscriber octomap_sub_;
@@ -66,12 +69,13 @@ private:
   ros::ServiceServer reevaluate_server_;
 
   // Service server callback
-  bool reevaluate(aeplanner::Reevaluate::Request &req, aeplanner::Reevaluate::Response &res);
+  bool reevaluate(aeplanner::Reevaluate::Request& req,
+                  aeplanner::Reevaluate::Response& res);
 
   // ---------------- Initialization ----------------
-  RRTNode *initialize();
-  void initializeKDTreeWithPreviousBestBranch(RRTNode *root);
-  void reevaluatePotentialInformationGainRecursive(RRTNode *node);
+  RRTNode* initialize();
+  void initializeKDTreeWithPreviousBestBranch(RRTNode* root);
+  void reevaluatePotentialInformationGainRecursive(RRTNode* node);
 
   // ---------------- Expand RRT Tree ----------------
   void expandRRT();
@@ -79,36 +83,34 @@ private:
   Eigen::Vector4d sampleNewPoint();
   bool isInsideBoundaries(Eigen::Vector4d point);
   bool collisionLine(Eigen::Vector4d p1, Eigen::Vector4d p2, double r);
-  RRTNode *chooseParent(RRTNode *node, double l);
-  void rewire(kdtree *kd_tree, RRTNode *new_node, double l, double r, double r_os);
+  RRTNode* chooseParent(RRTNode* node, double l);
+  void rewire(kdtree* kd_tree, RRTNode* new_node, double l, double r, double r_os);
   Eigen::Vector4d restrictDistance(Eigen::Vector4d nearest, Eigen::Vector4d new_pos);
 
-  std::pair<double, double> getGain(RRTNode *node);
+  std::pair<double, double> getGain(RRTNode* node);
   std::pair<double, double> gainCubature(Eigen::Vector4d state);
 
   // ---------------- Helpers ----------------
   //
-  void publishEvaluatedNodesRecursive(RRTNode *node);
+  void publishEvaluatedNodesRecursive(RRTNode* node);
 
-  double quaternionToYaw(geometry_msgs::Quaternion q);
   geometry_msgs::Pose vecToPose(Eigen::Vector4d state);
 
-  float CylTest_CapsFirst(const octomap::point3d &pt1,
-                          const octomap::point3d &pt2,
-                          float lsq, float rsq, const octomap::point3d &pt);
+  float CylTest_CapsFirst(const octomap::point3d& pt1, const octomap::point3d& pt2,
+                          float lsq, float rsq, const octomap::point3d& pt);
 
   // ---------------- Frontier ----------------
   geometry_msgs::PoseArray getFrontiers();
 
 public:
-  AEPlanner(const ros::NodeHandle &nh);
+  AEPlanner(const ros::NodeHandle& nh);
 
-  void execute(const aeplanner::aeplannerGoalConstPtr &goal);
+  void execute(const aeplanner::aeplannerGoalConstPtr& goal);
 
-  void octomapCallback(const octomap_msgs::Octomap &msg);
-  void agentPoseCallback(const geometry_msgs::PoseStamped &msg);
+  void octomapCallback(const octomap_msgs::Octomap& msg);
+  void agentPoseCallback(const geometry_msgs::PoseStamped& msg);
 };
 
-} // namespace aeplanner
+}  // namespace aeplanner
 
 #endif

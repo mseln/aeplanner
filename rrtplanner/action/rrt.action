@@ -1,9 +1,8 @@
 # Define the goal
-Header header
-geometry_msgs/Pose start
-geometry_msgs/Pose[] goal_poses
+geometry_msgs/PoseStamped start
+geometry_msgs/PoseArray goal_poses
 -------
 # Define the result
-geometry_msgs/Pose[] path
+nav_msgs/Path path
 -------
 # Define a feedback message
