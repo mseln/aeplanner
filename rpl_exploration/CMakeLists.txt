@@ -8,6 +8,7 @@ add_definitions(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  rospy
   tf
   std_msgs
   sensor_msgs

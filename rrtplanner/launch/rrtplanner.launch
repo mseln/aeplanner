@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <launch>
-  <node name="rrtplanner_node" pkg="rrtplanner" type="rrtplanner_node">
+  <node name="rrtplanner_node" pkg="rrtplanner" type="rrtplanner_node" output="screen">
     <remap from="octomap" to="octomap_full"/>
   </node>
 </launch>
