@@ -63,6 +63,7 @@ void AEPlanner::execute(const aeplanner::aeplannerGoalConstPtr& goal)
 
   ROS_DEBUG("extractPose");
   result.pose.pose = vecToPose(best_branch_root_->children_[0]->state_);
+  ROS_INFO_STREAM("Best node score: " << best_node_->score(params_.lambda));
   if (best_node_->score(params_.lambda) > params_.zero_gain)
     result.is_clear = true;
   else
@@ -326,12 +327,16 @@ std::pair<double, double> AEPlanner::getGain(RRTNode* node)
     {
       double gain = srv.response.mu;
       double yaw = srv.response.yaw;
+
+      ROS_INFO_STREAM("gain impl: " << gain);
       return std::make_pair(gain, yaw);
     }
   }
 
   node->gain_explicitly_calculated_ = true;
-  return gainCubature(node->state_);
+  std::pair<double, double> ret = gainCubature(node->state_);
+  ROS_INFO_STREAM("gain expl: " << ret.first);
+  return ret;
 }
 
 bool AEPlanner::reevaluate(aeplanner::Reevaluate::Request& req,

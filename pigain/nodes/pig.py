@@ -37,7 +37,7 @@ class PIGain:
         if self.visualize_mean or self.visualize_sigma:
             rospy.Timer(rospy.Duration(5), self.evaluate)
 
-        # Get environment boundaries
+        # Get environment boundaries 
         try:
             self.min = rospy.get_param('boundary/min')
             self.max = rospy.get_param('boundary/max')
@@ -67,7 +67,7 @@ class PIGain:
         self.idx = index.Index(properties = p)
         self.id = 0
 
-        rospy.Timer(rospy.Duration(2), self.reevaluate_timer_callback)
+        rospy.Timer(rospy.Duration(5), self.reevaluate_timer_callback)
 
     """ Save current pose of agent """
     def pose_callback(self, msg):
@@ -77,6 +77,7 @@ class PIGain:
 
     """ Reevaluate gain in all cached nodes that are closer to agent than self.range """
     def reevaluate_timer_callback(self, event):
+        rospy.loginfo("reevaluate start")
         if self.x is None or self.y is None or self.z is None:
             rospy.logwarn("No position received yet...")
             rospy.logwarn("Make sure that 'pose' has been correctly mapped and that it is being published")
@@ -90,7 +91,7 @@ class PIGain:
         reevaluate_list = []
         reevaluate_position_list = []
         for item in hits:
-            if(item.object.gain > 0.1):
+            if(item.object.gain > 2):
                 reevaluate_position_list.append(item.object.position)
                 reevaluate_list.append(item)
         try:
@@ -105,6 +106,8 @@ class PIGain:
 
             self.idx.delete(item.id, (item.object.position.x, item.object.position.y, item.object.position.z))
             self.idx.insert(item.id, (item.object.position.x, item.object.position.y, item.object.position.z), obj=item.object)
+
+        rospy.loginfo("reevaluate done")
 
     """ Insert node with estimated gain in rtree """
     def gain_callback(self, msg):
@@ -209,8 +212,8 @@ class PIGain:
         marker.scale.x = self.resolution
         marker.scale.y = self.resolution
         marker.scale.z = 0.1
-        marker.color.r = v
-        marker.color.g = 0
+        marker.color.r = v / 72.0
+        marker.color.g = 0 
         marker.color.b = 0.5
         marker.color.a = a
         marker.pose.orientation.w = 1.0
@@ -231,7 +234,7 @@ class PIGain:
         marker.scale.x = 0.4
         marker.scale.y = 0.4
         marker.scale.z = 0.4
-        marker.color.r = node.gain
+        marker.color.r = node.gain / 72.0
         marker.color.g = 0.0
         marker.color.b = 0.5
         marker.color.a = 1.0

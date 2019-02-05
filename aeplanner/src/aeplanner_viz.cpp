@@ -38,7 +38,7 @@ namespace aeplanner {
     a.pose.orientation.y = quat.y();
     a.pose.orientation.z = quat.z();
     a.pose.orientation.w = quat.w();
-    a.scale.x = std::max(node->gain_ / 20.0, 0.05);
+    a.scale.x = std::max(node->gain_ / 72.0, 0.05);
     a.scale.y = 0.1;
     a.scale.z = 0.1;
     a.color.r = 167.0 / 255.0;
