@@ -6,9 +6,9 @@ namespace aeplanner
 {
   Params readParams()
   {
+    // FIXME namespaces
     Params params;
     std::string ns = ros::this_node::getNamespace();
-    bool ret = true;
     params.hfov = 60;
     if (!ros::param::get(ns + "/camera/horizontal_fov", params.hfov)) {
       ROS_WARN_STREAM("No horizontal fov specified. Default: " << params.hfov);

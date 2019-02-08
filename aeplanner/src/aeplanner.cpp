@@ -47,7 +47,7 @@ void AEPlanner::execute(const aeplanner::aeplannerGoalConstPtr& goal)
   ROS_DEBUG("Init");
   RRTNode* root = initialize();
   ROS_DEBUG("expandRRT");
-  if (root->gain_ > 0.25 or !root->children_.size() or
+  if (root->gain_ > 0.25 or !root->children_.size() or // FIXME parameterize
       root->score(params_.lambda) < params_.zero_gain)
     expandRRT();
   else
@@ -128,7 +128,7 @@ void AEPlanner::initializeKDTreeWithPreviousBestBranch(RRTNode* root)
 
 void AEPlanner::reevaluatePotentialInformationGainRecursive(RRTNode* node)
 {
-  std::pair<double, double> ret = gainCubature(node->state_);
+  std::pair<double, double> ret = gainCubature(node->state_); // FIXME use gp?
   node->state_[3] = ret.second;  // Assign yaw angle that maximizes g
   node->gain_ = ret.first;
   for (typename std::vector<RRTNode*>::iterator node_it = node->children_.begin();
@@ -222,7 +222,6 @@ Eigen::Vector4d AEPlanner::sampleNewPoint()
 {
   // Samples one point uniformly over a sphere with a radius of
   // param_.max_sampling_radius
-  double radius = 10;
   Eigen::Vector4d point;
   do
   {
@@ -242,7 +241,7 @@ RRTNode* AEPlanner::chooseParent(RRTNode* node, double l)
 
   // Find nearest neighbour
   kdres* nearest = kd_nearest_range3(kd_tree_, node->state_[0], node->state_[1],
-                                     node->state_[2], l + 0.5);
+                                     node->state_[2], l + 0.5); // FIXME why +0.5?
 
   if (kd_res_size(nearest) <= 0)
     nearest = kd_nearest3(kd_tree_, node->state_[0], node->state_[1], node->state_[2]);
@@ -281,7 +280,7 @@ void AEPlanner::rewire(kdtree* kd_tree, RRTNode* new_node, double l, double r,
 
   RRTNode* node_nn;
   kdres* nearest = kd_nearest_range3(kd_tree, new_node->state_[0], new_node->state_[1],
-                                     new_node->state_[2], l + 0.5);
+                                     new_node->state_[2], l + 0.5); // FIXME why +0.5?
   while (!kd_res_end(nearest))
   {
     node_nn = (RRTNode*)kd_res_item_data(nearest);
@@ -303,7 +302,6 @@ Eigen::Vector4d AEPlanner::restrictDistance(Eigen::Vector4d nearest,
   Eigen::Vector3d origin(nearest[0], nearest[1], nearest[2]);
   Eigen::Vector3d direction(new_pos[0] - origin[0], new_pos[1] - origin[1],
                             new_pos[2] - origin[2]);
-  // if (direction.norm() > params_.extension_range)
   if (direction.norm() > params_.extension_range)
     direction = params_.extension_range * direction.normalized();
 
@@ -493,8 +491,6 @@ bool AEPlanner::collisionLine(Eigen::Vector4d p1, Eigen::Vector4d p2, double r)
                                           it_end = ot->end_leafs_bbx();
        it != it_end; ++it)
   {
-    // ROS_ERROR_STREAM(it.getZ() << " " << p2[2] << " " << it.getZ() - p2[2]);
-    // if(p[2] it.getZ() < -0.3) continue;
     octomap::point3d pt(it.getX(), it.getY(), it.getZ());
 
     if (it->getLogOdds() > 0)  // Node is occupied
