@@ -22,6 +22,10 @@ Rrt::Rrt(const ros::NodeHandle& nh)
     ROS_WARN("No overshoot paramerer specified, default is 0.5 m");
   if (!ros::param::get(ns + "/aep/tree/extension_range", extension_range_))
     ROS_WARN("No extension range specified, default is 1.0 m");
+  if (!ros::param::get(ns + "/boundary/min", boundary_min_))
+    ROS_WARN("No boundary min specified.");
+  if (!ros::param::get(ns + "/boundary/max", boundary_max_))
+    ROS_WARN("No boundary max specified.");
 
   ot_ = std::make_shared<octomap::OcTree>(
       1);  // Create dummy OcTree to prevent crash due to ot_ tree not initialized
@@ -52,8 +56,6 @@ void Rrt::execute(const rrtplanner::rrtGoalConstPtr& goal)
 
   kdtree* kd_tree = kd_create(3);    // Initalize tree
   kdtree* goal_tree = kd_create(3);  // kd tree with all goals
-  ROS_WARN_STREAM(
-      "We have this many goals for RRT: " << goal->goal_poses.poses.size());
   for (int i = 0; i < goal->goal_poses.poses.size(); ++i)
   {
     Eigen::Vector3d* g = new Eigen::Vector3d(goal->goal_poses.poses[i].position.x,
@@ -74,7 +76,6 @@ void Rrt::execute(const rrtplanner::rrtGoalConstPtr& goal)
   visualizeNode(goal->start.pose.position, 1000);
   visualizeGoals(goal->goal_poses.poses);
 
-  ROS_WARN("RRT PLANNING");
   for (int i = 0; i < N /* or !found_goals.size() */; ++i)
   {
     // Sample new position
@@ -101,7 +102,6 @@ void Rrt::execute(const rrtplanner::rrtGoalConstPtr& goal)
       RrtNode* tmp_goal = getGoal(goal_tree, z_new, l, r, r_os);
       if (tmp_goal)
       {
-        ROS_WARN("PUSHING A GOAL!!!");
         found_goals.push_back(tmp_goal);
       }
     }
@@ -134,7 +134,12 @@ Eigen::Vector3d Rrt::sample()
 {
   Eigen::Vector3d x_samp;
   for (int i = 0; i < 3; ++i)
-    x_samp[i] = 60 * (((double)rand()) / ((double)RAND_MAX) - 0.5);
+  {
+    do
+    {
+      x_samp[i] = 60 * (((double)rand()) / ((double)RAND_MAX) - 0.5);
+    } while(x_samp[i] < boundary_min_[i] or x_samp[i] > boundary_max_[i]);
+  }
 
   return x_samp;
 }

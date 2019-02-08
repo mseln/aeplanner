@@ -78,6 +78,8 @@ private:
   double bounding_radius_;
   double bounding_overshoot_;
   double extension_range_;
+  std::vector<double> boundary_min_;
+  std::vector<double> boundary_max_;
 };
 
 float CylTest_CapsFirst(const octomap::point3d &pt1,
