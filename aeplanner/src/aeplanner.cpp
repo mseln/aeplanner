@@ -452,7 +452,7 @@ geometry_msgs::PoseArray AEPlanner::getFrontiers()
   geometry_msgs::PoseArray frontiers;
 
   pigain::BestNode srv;
-  srv.request.threshold = 0.25;
+  srv.request.threshold = 16; // FIXME parameterize
   if (best_node_client_.call(srv))
   {
     for (int i = 0; i < srv.response.best_node.size(); ++i)
