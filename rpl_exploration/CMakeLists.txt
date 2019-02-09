@@ -156,12 +156,6 @@ add_definitions(${PCL_DEFINITIONS})
 # add_dependencies(rpl_exploration_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-add_library(laserscan_to_pointcloud src/laserscan_to_pointcloud.cpp)
-target_link_libraries(laserscan_to_pointcloud ${catkin_LIBRARIES})
-if(catkin_EXPORTED_LIBRARIES)
-  add_dependencies(laserscan_to_pointcloud ${catkin_EXPORTED_LIBRARIES})
-endif()
-
 add_executable(fly_to src/fly_to.cpp)
 target_link_libraries( fly_to ${catkin_LIBRARIES})
 add_dependencies(fly_to rpl_exploration_generate_messages_cpp)
