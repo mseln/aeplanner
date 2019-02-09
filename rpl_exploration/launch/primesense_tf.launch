@@ -1,5 +1,0 @@
-<?xml version="1.0" ?>
-<launch>
-  <node pkg="tf" type="static_transform_publisher" name="primesense_broadcaster" args="0.05 0 0.13 -1.57079633 0 -1.57079633 base_link camera_link 100" />
-</launch>
-

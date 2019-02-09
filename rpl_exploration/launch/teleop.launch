@@ -1,6 +1,0 @@
-<?xml version="1.0" ?>
-<launch>
-  <node name="teleop" pkg="rpl_exploration" type="teleop.py">
-    <remap from="cmd_vel" to="/mavros/setpoint_velocity/cmd_vel"/>
-  </node>
-</launch>

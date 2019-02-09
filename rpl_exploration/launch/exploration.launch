@@ -17,8 +17,7 @@
   </group>
 
   <!-- Nodelet manager for camera-->
-  <node pkg="nodelet" type="nodelet" args="manager"
-name="camera_manager" output="screen"/>
+  <node pkg="nodelet" type="nodelet" args="manager" name="camera_manager" output="screen"/>
 
   <node pkg="nodelet" type="nodelet" name="image_to_points" args="load depth_image_proc/point_cloud_xyz camera_manager --no-bond">
     <remap from="camera_info" to="/camera/depth/camera_info" />
