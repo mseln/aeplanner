@@ -1,5 +1,26 @@
 # Autonomous Exploration Planner - aeplanner
 
+aeplanner is an exploration planning package for 3d environments. It subscribes to an [OctoMap](https://octomap.github.io/) and will propose waypoints that maximizes the information gain while minimizing the traversed distance.
+
+Use aeplanner?
+If you are using aeplanner, please cite our paper **Efficient Autonomous Exploration Planning of Large-Scale 3-D Environments** in IEEE Robotics and Automation Letters, vol. 4, no. 2, pp. 1699-1706, April 2019.
+
+BibTeX:
+```
+@ARTICLE{8633925,
+    author={M. {Selin} and M. {Tiger} and D. {Duberg} and F. {Heintz} and P. {Jensfelt}},
+    journal={IEEE Robotics and Automation Letters},
+    title={Efficient Autonomous Exploration Planning of Large-Scale 3-D Environments},
+    year={2019},
+    volume={4},
+    number={2},
+    pages={1699-1706},
+    keywords={Planning;Sensors;Uncertainty;Drones;Mobile robots;Path planning;Search and rescue robots;motion and path planning;mapping},
+    doi={10.1109/LRA.2019.2897343},
+    ISSN={2377-3766},
+    month={April},}
+```
+
 
 ## System Requirements
 This repository has been tested with: 
