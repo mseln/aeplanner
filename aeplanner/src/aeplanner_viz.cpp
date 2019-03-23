@@ -1,24 +1,24 @@
 #include <aeplanner/aeplanner_viz.h>
 
 namespace aeplanner {
-  visualization_msgs::MarkerArray createRRTMarkerArray(RRTNode * root, double lambda){
+  visualization_msgs::MarkerArray createRRTMarkerArray(std::shared_ptr<RRTNode> root, double lambda){
     int id = 0;
     visualization_msgs::MarkerArray marker_array;
     recurse(root, &marker_array, &id, lambda);
 
     return marker_array;
   }
-  void recurse(RRTNode * node, visualization_msgs::MarkerArray * marker_array, int * id, double lambda){
-    for(std::vector<RRTNode*>::iterator child_it  = node->children_.begin();
+  void recurse(std::shared_ptr<RRTNode> node, visualization_msgs::MarkerArray * marker_array, int * id, double lambda){
+    for(std::vector<std::shared_ptr<RRTNode>>::iterator child_it  = node->children_.begin();
                                         child_it != node->children_.end(); ++child_it){
-      RRTNode * child = (*child_it);
+      std::shared_ptr<RRTNode> child = (*child_it);
       if(child) recurse(child, marker_array, id, lambda);
       marker_array->markers.push_back(createEdgeMarker(child, (*id), "map", lambda)); // FIXME read frame id from config
       marker_array->markers.push_back(createNodeMarker(child, (*id)++, "map"));
     }
   }
 
-  visualization_msgs::Marker createNodeMarker(RRTNode * node, int id, std::string frame_id){
+  visualization_msgs::Marker createNodeMarker(std::shared_ptr<RRTNode> node, int id, std::string frame_id){
     visualization_msgs::Marker marker;
     marker.header.stamp = ros::Time::now();
     marker.header.seq = id;
@@ -49,7 +49,7 @@ namespace aeplanner {
     return marker;
   }
 
-  visualization_msgs::Marker createEdgeMarker(RRTNode * node, int id, std::string frame_id, double lambda){
+  visualization_msgs::Marker createEdgeMarker(std::shared_ptr<RRTNode> node, int id, std::string frame_id, double lambda){
     visualization_msgs::Marker marker;
     marker.header.stamp = ros::Time::now();
     marker.header.seq = id;

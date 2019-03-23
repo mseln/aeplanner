@@ -13,8 +13,6 @@
 
 #include <eigen3/Eigen/Dense>
 
-#include <kdtree/kdtree.h>
-
 #include <aeplanner/data_structures.h>
 #include <aeplanner/param.h>
 #include <aeplanner/Reevaluate.h>
@@ -36,6 +34,9 @@ namespace aeplanner
 {
 class AEPlanner
 {
+typedef std::pair<point, std::shared_ptr<RRTNode>> value;
+typedef boost::geometry::index::rtree<value, boost::geometry::index::rstar<16>> value_rtree;
+
 private:
   ros::NodeHandle nh_;
   actionlib::SimpleActionServer<aeplanner::aeplannerAction> as_;
@@ -47,13 +48,13 @@ private:
   bool current_state_initialized_;
 
   // Keep track of the best node and its score
-  RRTNode* best_node_;
-  RRTNode* best_branch_root_;
+  std::shared_ptr<RRTNode> best_node_;
+  std::shared_ptr<RRTNode> best_branch_root_;
 
   std::shared_ptr<octomap::OcTree> ot_;
 
   // kd tree for finding nearest neighbours
-  kdtree* kd_tree_;
+  value_rtree rtree_;
 
   // Subscribers
   ros::Subscriber octomap_sub_;
@@ -73,9 +74,9 @@ private:
                   aeplanner::Reevaluate::Response& res);
 
   // ---------------- Initialization ----------------
-  RRTNode* initialize();
-  void initializeKDTreeWithPreviousBestBranch(RRTNode* root);
-  void reevaluatePotentialInformationGainRecursive(RRTNode* node);
+  std::shared_ptr<RRTNode> initialize();
+  void initializeKDTreeWithPreviousBestBranch(std::shared_ptr<RRTNode> root);
+  void reevaluatePotentialInformationGainRecursive(std::shared_ptr<RRTNode> node);
 
   // ---------------- Expand RRT Tree ----------------
   void expandRRT();
@@ -83,16 +84,16 @@ private:
   Eigen::Vector4d sampleNewPoint();
   bool isInsideBoundaries(Eigen::Vector4d point);
   bool collisionLine(Eigen::Vector4d p1, Eigen::Vector4d p2, double r);
-  RRTNode* chooseParent(RRTNode* node, double l);
-  void rewire(kdtree* kd_tree, RRTNode* new_node, double l, double r, double r_os);
+  std::shared_ptr<RRTNode> chooseParent(std::shared_ptr<RRTNode> node, double l);
+  void rewire(std::shared_ptr<RRTNode> new_node, double l, double r, double r_os);
   Eigen::Vector4d restrictDistance(Eigen::Vector4d nearest, Eigen::Vector4d new_pos);
 
-  std::pair<double, double> getGain(RRTNode* node);
+  std::pair<double, double> getGain(std::shared_ptr<RRTNode> node);
   std::pair<double, double> gainCubature(Eigen::Vector4d state);
 
   // ---------------- Helpers ----------------
   //
-  void publishEvaluatedNodesRecursive(RRTNode* node);
+  void publishEvaluatedNodesRecursive(std::shared_ptr<RRTNode> node);
 
   geometry_msgs::Pose vecToPose(Eigen::Vector4d state);
 

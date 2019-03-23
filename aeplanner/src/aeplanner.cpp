@@ -20,9 +20,6 @@ AEPlanner::AEPlanner(const ros::NodeHandle& nh)
 {
   params_ = readParams();
   as_.start();
-
-  // Initialize kd-tree
-  kd_tree_ = kd_create(3);
 }
 
 void AEPlanner::execute(const aeplanner::aeplannerGoalConstPtr& goal)
@@ -45,7 +42,7 @@ void AEPlanner::execute(const aeplanner::aeplannerGoalConstPtr& goal)
   }
 
   ROS_DEBUG("Init");
-  RRTNode* root = initialize();
+  std::shared_ptr<RRTNode> root = initialize();
   ROS_DEBUG("expandRRT");
   if (root->gain_ > 0.25 or !root->children_.size() or // FIXME parameterize
       root->score(params_.lambda) < params_.zero_gain)
@@ -70,23 +67,16 @@ void AEPlanner::execute(const aeplanner::aeplannerGoalConstPtr& goal)
   {
     result.frontiers = getFrontiers();
     result.is_clear = false;
-    delete best_branch_root_;
+    // delete best_branch_root_;
     best_branch_root_ = NULL;
   }
   as_.setSucceeded(result);
-
-  ROS_DEBUG("Deleting/Freeing!");
-  delete root;
-  kd_free(kd_tree_);
-  ROS_DEBUG("Done!");
 }
 
-RRTNode* AEPlanner::initialize()
+std::shared_ptr<RRTNode> AEPlanner::initialize()
 {
-  // Initialize kd-tree
-  kd_tree_ = kd_create(3);
-  best_node_ = NULL;
-  RRTNode* root = NULL;
+  best_node_ = nullptr;
+  std::shared_ptr<RRTNode> root;
 
   if (best_branch_root_)
   {
@@ -96,7 +86,6 @@ RRTNode* AEPlanner::initialize()
     root = best_branch_root_->children_[0];
     root->parent_ = NULL;
     best_branch_root_->children_.clear();
-    delete best_branch_root_;
 
     initializeKDTreeWithPreviousBestBranch(root);
     reevaluatePotentialInformationGainRecursive(root);
@@ -104,34 +93,37 @@ RRTNode* AEPlanner::initialize()
   else
   {
     // Initialize without any previous branch
-    root = new RRTNode();
+    root = std::make_shared<RRTNode>();
     root->state_[0] = current_state_[0];
     root->state_[1] = current_state_[1];
     root->state_[2] = current_state_[2];
-    kd_insert3(kd_tree_, root->state_[0], root->state_[1], root->state_[2], root);
+    ROS_ERROR_STREAM("Inserting...");
+    rtree_.insert(std::make_pair(point(root->state_[0], root->state_[1], root->state_[2]), root));
+    ROS_ERROR_STREAM("Inserting... [done]!");
   }
 
   return root;
 }
 
-void AEPlanner::initializeKDTreeWithPreviousBestBranch(RRTNode* root)
+void AEPlanner::initializeKDTreeWithPreviousBestBranch(std::shared_ptr<RRTNode> root)
 {
-  RRTNode* current_node = root;
+  std::shared_ptr<RRTNode> current_node = root;
   do
   {
-    kd_insert3(kd_tree_, current_node->state_[0], current_node->state_[1],
-               current_node->state_[2], current_node);
+    rtree_.insert(std::make_pair(point(current_node->state_[0], current_node->state_[1],
+               current_node->state_[2]), current_node));
+
     if (current_node->children_.size())
       current_node = current_node->children_[0];
   } while (current_node->children_.size());
 }
 
-void AEPlanner::reevaluatePotentialInformationGainRecursive(RRTNode* node)
+void AEPlanner::reevaluatePotentialInformationGainRecursive(std::shared_ptr<RRTNode> node)
 {
-  std::pair<double, double> ret = gainCubature(node->state_); // FIXME use gp?
+  std::pair<double, double> ret = gainCubature(node->state_);
   node->state_[3] = ret.second;  // Assign yaw angle that maximizes g
   node->gain_ = ret.first;
-  for (typename std::vector<RRTNode*>::iterator node_it = node->children_.begin();
+  for (typename std::vector<std::shared_ptr<RRTNode>>::iterator node_it = node->children_.begin();
        node_it != node->children_.end(); ++node_it)
     reevaluatePotentialInformationGainRecursive(*node_it);
 }
@@ -149,8 +141,8 @@ void AEPlanner::expandRRT()
        ++n)
   {
     ROS_DEBUG_STREAM("In expand RRT iteration: " << n);
-    RRTNode* new_node = new RRTNode();
-    RRTNode* nearest;
+    std::shared_ptr<RRTNode> new_node = std::make_shared<RRTNode>();
+    std::shared_ptr<RRTNode> nearest;
     octomap::OcTreeNode* ot_result;
 
     // Sample new point around agent and check that
@@ -193,7 +185,7 @@ void AEPlanner::expandRRT()
     nearest->children_.push_back(new_node);
 
     // rewire tree with new node
-    rewire(kd_tree_, nearest, params_.extension_range, params_.bounding_radius,
+    rewire(nearest, params_.extension_range, params_.bounding_radius,
            params_.d_overshoot_);
 
     // Calculate potential information gain for new_node
@@ -202,8 +194,8 @@ void AEPlanner::expandRRT()
     new_node->state_[3] = ret.second;  // Assign yaw angle that maximizes g
     new_node->gain_ = ret.first;
     ROS_DEBUG_STREAM("Insert into KDTREE");
-    kd_insert3(kd_tree_, new_node->state_[0], new_node->state_[1], new_node->state_[2],
-               new_node);
+    rtree_.insert(std::make_pair(
+          point(new_node->state_[0], new_node->state_[1], new_node->state_[2]), new_node));
 
     // Update best node
 
@@ -234,64 +226,60 @@ Eigen::Vector4d AEPlanner::sampleNewPoint()
   return point;
 }
 
-RRTNode* AEPlanner::chooseParent(RRTNode* node, double l)
+std::shared_ptr<RRTNode> AEPlanner::chooseParent(std::shared_ptr<RRTNode> node, double l)
 {
   std::shared_ptr<octomap::OcTree> ot = ot_;
   Eigen::Vector4d current_state = current_state_;
 
   // Find nearest neighbour
-  kdres* nearest = kd_nearest_range3(kd_tree_, node->state_[0], node->state_[1],
-                                     node->state_[2], l + 0.5); // FIXME why +0.5?
+  std::vector<value> nearest;
+  rtree_.query(boost::geometry::index::nearest(
+        point(node->state_[0], node->state_[1], node->state_[2]), 5), std::back_inserter(nearest));
 
-  if (kd_res_size(nearest) <= 0)
-    nearest = kd_nearest3(kd_tree_, node->state_[0], node->state_[1], node->state_[2]);
-  if (kd_res_size(nearest) <= 0)
-  {
-    kd_res_free(nearest);
+  if (nearest.empty())
     return NULL;
-  }
 
-  RRTNode* node_nn = (RRTNode*)kd_res_item_data(nearest);
+  std::shared_ptr<RRTNode> best_node(NULL);
+  double best_cost;
 
-  RRTNode* best_node = node_nn;
-  double best_node_cost = best_node->cost();
-  while (!kd_res_end(nearest))
+  for(value item : nearest)
   {
-    node_nn = (RRTNode*)kd_res_item_data(nearest);
-    double node_cost = node_nn->cost();
-    if (best_node and node_cost < best_node_cost)
-    {
-      best_node = node_nn;
-      best_node_cost = node_cost;
-    }
+    std::shared_ptr<RRTNode> current_node = item.second;
+    double current_cost = current_node->cost();
 
-    kd_res_next(nearest);
+    if (!best_node or current_cost < best_cost)
+    {
+      best_node = current_node;
+      best_cost = current_cost;
+    }
   }
 
-  kd_res_free(nearest);
   return best_node;
 }
 
-void AEPlanner::rewire(kdtree* kd_tree, RRTNode* new_node, double l, double r,
-                       double r_os)
+void AEPlanner::rewire(std::shared_ptr<RRTNode> new_node,
+                       double l, double r, double r_os)
 {
   std::shared_ptr<octomap::OcTree> ot = ot_;
   Eigen::Vector4d current_state = current_state_;
 
-  RRTNode* node_nn;
-  kdres* nearest = kd_nearest_range3(kd_tree, new_node->state_[0], new_node->state_[1],
-                                     new_node->state_[2], l + 0.5); // FIXME why +0.5?
-  while (!kd_res_end(nearest))
+  std::vector<value> nearest;
+  rtree_.query(boost::geometry::index::nearest(
+        point(new_node->state_[0], new_node->state_[1], new_node->state_[2]), 5), 
+        std::back_inserter(nearest));
+
+  Eigen::Vector3d p1(new_node->state_[0], new_node->state_[1], new_node->state_[2]);
+  double new_cost = new_node->cost();
+
+  for(value item : nearest)
   {
-    node_nn = (RRTNode*)kd_res_item_data(nearest);
-    Eigen::Vector3d p1(new_node->state_[0], new_node->state_[1], new_node->state_[2]);
-    Eigen::Vector3d p2(node_nn->state_[0], node_nn->state_[1], node_nn->state_[2]);
-    if (node_nn->cost() > new_node->cost() + (p1 - p2).norm())
+    std::shared_ptr<RRTNode> current_node = item.second;
+    Eigen::Vector3d p2(current_node->state_[0], current_node->state_[1], current_node->state_[2]);
+    if (current_node->cost() > new_cost + (p1 - p2).norm())
     {
-      if (!collisionLine(new_node->state_, node_nn->state_, r))
-        node_nn->parent_ = new_node;
+      if (!collisionLine(new_node->state_, current_node->state_, r))
+        current_node->parent_ = new_node;
     }
-    kd_res_next(nearest);
   }
 }
 
@@ -312,7 +300,7 @@ Eigen::Vector4d AEPlanner::restrictDistance(Eigen::Vector4d nearest,
   return new_pos;
 }
 
-std::pair<double, double> AEPlanner::getGain(RRTNode* node)
+std::pair<double, double> AEPlanner::getGain(std::shared_ptr<RRTNode> node)
 {
   pigain::Query srv;
   srv.request.point.x = node->state_[0];
@@ -326,7 +314,6 @@ std::pair<double, double> AEPlanner::getGain(RRTNode* node)
       double gain = srv.response.mu;
       double yaw = srv.response.yaw;
 
-      ROS_INFO_STREAM("gain impl: " << gain);
       return std::make_pair(gain, yaw);
     }
   }
@@ -517,11 +504,11 @@ void AEPlanner::octomapCallback(const octomap_msgs::Octomap& msg)
   ROS_DEBUG_STREAM("Freeing ot_ done:");
 }
 
-void AEPlanner::publishEvaluatedNodesRecursive(RRTNode* node)
+void AEPlanner::publishEvaluatedNodesRecursive(std::shared_ptr<RRTNode> node)
 {
   if (!node)
     return;
-  for (typename std::vector<RRTNode*>::iterator node_it = node->children_.begin();
+  for (typename std::vector<std::shared_ptr<RRTNode>>::iterator node_it = node->children_.begin();
        node_it != node->children_.end(); ++node_it)
   {
     if ((*node_it)->gain_explicitly_calculated_)

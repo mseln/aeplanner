@@ -11,10 +11,10 @@
 #include <aeplanner/data_structures.h>
 
 namespace aeplanner {
-  visualization_msgs::MarkerArray createRRTMarkerArray(RRTNode * root, double lambda);
-  void recurse(RRTNode * node, visualization_msgs::MarkerArray * marker_array, int * id, double lambda);
+  visualization_msgs::MarkerArray createRRTMarkerArray(std::shared_ptr<RRTNode> root, double lambda);
+  void recurse(std::shared_ptr<RRTNode> node, visualization_msgs::MarkerArray * marker_array, int * id, double lambda);
 
-  visualization_msgs::Marker createNodeMarker(RRTNode * node, int id, std::string frame_id);
-  visualization_msgs::Marker createEdgeMarker(RRTNode * node, int id, std::string frame_id, double lambda);
+  visualization_msgs::Marker createNodeMarker(std::shared_ptr<RRTNode> node, int id, std::string frame_id);
+  visualization_msgs::Marker createEdgeMarker(std::shared_ptr<RRTNode> node, int id, std::string frame_id, double lambda);
 }
 #endif
