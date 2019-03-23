@@ -1,5 +1,7 @@
 # Define the goal
-geometry_msgs/PoseStamped pose  
+geometry_msgs/PoseStamped pose
+float32 distance_converged
+float32 yaw_converged
 ---
 # Define the result
 ---

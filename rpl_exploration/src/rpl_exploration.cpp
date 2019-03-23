@@ -18,6 +18,8 @@
 #include <nav_msgs/Path.h>
 #include <tf2/utils.h>
 
+#include <eigen3/Eigen/Eigen>
+
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "exploration");
@@ -58,35 +60,36 @@ int main(int argc, char** argv)
   ROS_INFO("rrt Action server started!");
 
   // Get current pose
-  geometry_msgs::PoseStamped::ConstPtr init_pose =
-      ros::topic::waitForMessage<geometry_msgs::PoseStamped>("/mavros/"
-                                                             "local_position/pose");
+  geometry_msgs::PoseStamped::ConstPtr init_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("/mavros/"
+                                                                                                          "local_"
+                                                                                                          "position/"
+                                                                                                          "pose");
   double init_yaw = tf2::getYaw(init_pose->pose.orientation);
-  // Up 2 meters and then forward one meter
-  double initial_positions[8][4] = {
-    { init_pose->pose.position.x, init_pose->pose.position.y,
-      init_pose->pose.position.z + 2.0, init_yaw },
-    { init_pose->pose.position.x + 1.0 * std::cos(init_yaw),
-      init_pose->pose.position.y + 1.0 * std::sin(init_yaw),
-      init_pose->pose.position.z + 2.0, init_yaw },
-  };
+  std::vector<Eigen::Vector4d> initial_positions;
+  initial_positions.push_back(Eigen::Vector4d(init_pose->pose.position.x, init_pose->pose.position.y, 2.0, init_yaw));
+  double move_forward_distance = 0.0;
+  double yaw_radians = M_PI;
+  initial_positions.push_back(Eigen::Vector4d(init_pose->pose.position.x + move_forward_distance * std::cos(init_yaw),
+                                              init_pose->pose.position.y + move_forward_distance * std::sin(init_yaw),
+                                              2.0, init_yaw + yaw_radians));
 
   // This is the initialization motion, necessary that the known free space
   // allows the planning of initial paths.
   ROS_INFO("Starting the planner: Performing initialization motion");
   geometry_msgs::PoseStamped last_pose;
 
-  for (int i = 0; i < 2; ++i)
+  for (int i = 0; i < initial_positions.size(); ++i)
   {
     rpl_exploration::FlyToGoal goal;
     goal.pose.pose.position.x = initial_positions[i][0];
     goal.pose.pose.position.y = initial_positions[i][1];
     goal.pose.pose.position.z = initial_positions[i][2];
-    goal.pose.pose.orientation =
-        tf::createQuaternionMsgFromYaw(initial_positions[i][3]);
+    goal.pose.pose.orientation = tf::createQuaternionMsgFromYaw(initial_positions[i][3]);
+    goal.distance_converged = 0.1;
+    goal.yaw_converged = 0.1 * M_PI;
     last_pose.pose = goal.pose.pose;
 
-    ROS_INFO_STREAM("Sending initial goal...");
+    ROS_INFO("Sending initial goal %d out of %d...", (i + 1), (int)initial_positions.size());
     ac.sendGoal(goal);
 
     ac.waitForResult(ros::Duration(0));
@@ -121,12 +124,14 @@ int main(int argc, char** argv)
       ros::Time s = ros::Time::now();
       geometry_msgs::PoseStamped goal_pose = aep_ac.getResult()->pose;
       // Write path to file
-      pathfile << goal_pose.pose.position.x << ", " << goal_pose.pose.position.y
-               << ", " << goal_pose.pose.position.z << ", n" << std::endl;
+      pathfile << goal_pose.pose.position.x << ", " << goal_pose.pose.position.y << ", " << goal_pose.pose.position.z
+               << ", n" << std::endl;
 
       last_pose.pose = goal_pose.pose;
       rpl_exploration::FlyToGoal goal;
       goal.pose = goal_pose;
+      goal.distance_converged = 0.5;
+      goal.yaw_converged = 0.5 * M_PI;
       ac.sendGoal(goal);
 
       ac.waitForResult(ros::Duration(0));
@@ -144,8 +149,7 @@ int main(int argc, char** argv)
         ROS_WARN("Exploration complete!");
         break;
       }
-      for (auto it = aep_ac.getResult()->frontiers.poses.begin();
-           it != aep_ac.getResult()->frontiers.poses.end(); ++it)
+      for (auto it = aep_ac.getResult()->frontiers.poses.begin(); it != aep_ac.getResult()->frontiers.poses.end(); ++it)
       {
         rrt_goal.goal_poses.poses.push_back(*it);
       }
@@ -162,12 +166,14 @@ int main(int argc, char** argv)
       {
         geometry_msgs::Pose goal_pose = path.poses[i].pose;
         // Write path to file
-        pathfile << goal_pose.position.x << ", " << goal_pose.position.y << ", "
-                 << goal_pose.position.z << ", f" << std::endl;
+        pathfile << goal_pose.position.x << ", " << goal_pose.position.y << ", " << goal_pose.position.z << ", f"
+                 << std::endl;
 
         last_pose.pose = goal_pose;
         rpl_exploration::FlyToGoal goal;
         goal.pose.pose = goal_pose;
+        goal.distance_converged = 0.5;
+        goal.yaw_converged = 0.5 * M_PI;
         ac.sendGoal(goal);
 
         ac.waitForResult(ros::Duration(0));
