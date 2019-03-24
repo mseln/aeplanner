@@ -32,9 +32,9 @@ Rrt::Rrt(const ros::NodeHandle& nh)
   as_.start();
 }
 
-void Rrt::execute(const rrtplanner::rrtGoalConstPtr& goal)
+void Rrt::execute(const aeplanner_msgs::rrtGoalConstPtr& goal)
 {
-  rrtplanner::rrtResult result;
+  aeplanner_msgs::rrtResult result;
   if (!ot_)
   {
     ROS_WARN("No octomap received");
@@ -52,26 +52,27 @@ void Rrt::execute(const rrtplanner::rrtGoalConstPtr& goal)
   double l = extension_range_;
   double r = bounding_radius_;
   double r_os = bounding_overshoot_;
-  std::vector<RrtNode*> found_goals;
+  std::vector<std::shared_ptr<RrtNode>> found_goals;
 
-  kdtree* kd_tree = kd_create(3);    // Initalize tree
-  kdtree* goal_tree = kd_create(3);  // kd tree with all goals
+  value_rtree rtree;       // Initalize tree
+  point_rtree goal_rtree;  // kd tree with all goals
+  ROS_WARN_STREAM("We have this many goals for RRT: " << goal->goal_poses.poses.size());
   for (int i = 0; i < goal->goal_poses.poses.size(); ++i)
   {
     Eigen::Vector3d* g = new Eigen::Vector3d(goal->goal_poses.poses[i].position.x,
                                              goal->goal_poses.poses[i].position.y,
                                              goal->goal_poses.poses[i].position.z);
-    kd_insert3(goal_tree, (*g)[0], (*g)[1], (*g)[2], g);
+    goal_rtree.insert(point((*g)[0], (*g)[1], (*g)[2]));
   }
 
   // Initialize root position
-  RrtNode* root = new RrtNode;
+  std::shared_ptr<RrtNode> root = std::make_shared<RrtNode>();
   root->pos[0] = goal->start.pose.position.x;
   root->pos[1] = goal->start.pose.position.y;
   root->pos[2] = goal->start.pose.position.z;
   root->parent = NULL;
 
-  kd_insert3(kd_tree, root->pos[0], root->pos[1], root->pos[2], root);
+  rtree.insert(std::make_pair(point(root->pos[0], root->pos[1], root->pos[2]), root));
 
   visualizeNode(goal->start.pose.position, 1000);
   visualizeGoals(goal->goal_poses.poses);
@@ -82,7 +83,7 @@ void Rrt::execute(const rrtplanner::rrtGoalConstPtr& goal)
     Eigen::Vector3d z_samp = sample();
 
     // Get nearest neighbour
-    RrtNode* z_parent = chooseParent(kd_tree, z_samp, l);
+    std::shared_ptr<RrtNode> z_parent = chooseParent(rtree, z_samp, l);
     if (!z_parent)
       continue;
 
@@ -93,13 +94,13 @@ void Rrt::execute(const rrtplanner::rrtGoalConstPtr& goal)
     if (!collisionLine(z_parent->pos, new_pos + direction.normalized() * r_os, r))
     {
       // Add node to tree
-      RrtNode* z_new = addNodeToTree(kd_tree, z_parent, new_pos);
-      rewire(kd_tree, z_new, l, r, r_os);
+      std::shared_ptr<RrtNode> z_new = addNodeToTree(&rtree, z_parent, new_pos);
+      rewire(rtree, z_new, l, r, r_os);
 
       visualizeEdge(z_new, i);
 
       // Check if goal has been reached
-      RrtNode* tmp_goal = getGoal(goal_tree, z_new, l, r, r_os);
+      std::shared_ptr<RrtNode> tmp_goal = getGoal(goal_rtree, z_new, l, r, r_os);
       if (tmp_goal)
       {
         found_goals.push_back(tmp_goal);
@@ -112,10 +113,6 @@ void Rrt::execute(const rrtplanner::rrtGoalConstPtr& goal)
   }
 
   result.path = getBestPath(found_goals);
-
-  delete root;
-  kd_free(kd_tree);
-  kd_free(goal_tree);
 
   as_.setSucceeded(result);
 }
@@ -144,52 +141,59 @@ Eigen::Vector3d Rrt::sample()
   return x_samp;
 }
 
-RrtNode* Rrt::chooseParent(kdtree* kd_tree, Eigen::Vector3d node, double l)
+std::shared_ptr<RrtNode> Rrt::chooseParent(const value_rtree& rtree, Eigen::Vector3d node,
+                                           double l)
 {
-  kdres* nearest = kd_nearest_range3(kd_tree, node[0], node[1], node[2], l + 0.5);
-  if (kd_res_size(nearest) <= 0)
-  {
-    nearest = kd_nearest3(kd_tree, node[0], node[1], node[2]);
-  }
-  if (kd_res_size(nearest) <= 0)
-  {
-    kd_res_free(nearest);
-    return NULL;
-  }
+  // TODO: How many neighbours to look for?
+  std::vector<value> nearest;
+  rtree.query(boost::geometry::index::nearest(point(node[0], node[1], node[2]), 5),
+              std::back_inserter(nearest));
 
-  RrtNode* node_nn = (RrtNode*)kd_res_item_data(nearest);
-  int i = 0;
+  // TODO: Check if correct
+  std::shared_ptr<RrtNode> best_node;
+  double best_cost;
 
-  RrtNode* best_node = node_nn;
-  while (!kd_res_end(nearest))
+  for (value item : nearest)
   {
-    node_nn = (RrtNode*)kd_res_item_data(nearest);
-    if (best_node and node_nn->cost() < best_node->cost())
-      best_node = node_nn;
+    std::shared_ptr<RrtNode> current_node = item.second;
 
-    kd_res_next(nearest);
+    double current_cost = current_node->cost();
+
+    if (!best_node || current_cost < best_cost)
+    {
+      best_node = current_node;
+      best_cost = current_cost;
+    }
   }
 
-  kd_res_free(nearest);
   return best_node;
 }
 
-void Rrt::rewire(kdtree* kd_tree, RrtNode* new_node, double l, double r, double r_os)
+void Rrt::rewire(const value_rtree& rtree, std::shared_ptr<RrtNode> new_node, double l,
+                 double r, double r_os)
 {
-  RrtNode* node_nn;
-  kdres* nearest = kd_nearest_range3(kd_tree, new_node->pos[0], new_node->pos[1],
-                                     new_node->pos[2], l + 0.5);
-  while (!kd_res_end(nearest))
+  // TODO: How many neighbours to look for?
+  std::vector<value> nearest;
+  rtree.query(boost::geometry::index::nearest(
+                  point(new_node->pos[0], new_node->pos[1], new_node->pos[2]), 5),
+              std::back_inserter(nearest));
+
+  double new_cost = new_node->cost();
+
+  for (value item : nearest)
   {
-    node_nn = (RrtNode*)kd_res_item_data(nearest);
-    if (node_nn->cost() > new_node->cost() + (node_nn->pos - new_node->pos).norm())
+    std::shared_ptr<RrtNode> current_node = item.second;
+
+    if (current_node->cost() > new_cost + (current_node->pos - new_node->pos).norm())
     {
-      if (!collisionLine(
-              new_node->pos,
-              node_nn->pos + (node_nn->pos - new_node->pos).normalized() * r_os, r))
-        node_nn->parent = new_node;
+      if (!collisionLine(new_node->pos,
+                         current_node->pos +
+                             (current_node->pos - new_node->pos).normalized() * r_os,
+                         r))
+      {
+        current_node->parent = new_node;
+      }
     }
-    kd_res_next(nearest);
   }
 }
 
@@ -203,42 +207,49 @@ Eigen::Vector3d Rrt::getNewPos(Eigen::Vector3d sampled, Eigen::Vector3d parent,
   return parent + direction;
 }
 
-RrtNode* Rrt::addNodeToTree(kdtree* kd_tree, RrtNode* parent,
-                            Eigen::Vector3d new_pos)
+std::shared_ptr<RrtNode> Rrt::addNodeToTree(value_rtree* rtree,
+                                            std::shared_ptr<RrtNode> parent,
+                                            Eigen::Vector3d new_pos)
 {
-  RrtNode* new_node = new RrtNode;
+  std::shared_ptr<RrtNode> new_node = std::make_shared<RrtNode>();
   new_node->pos = new_pos;
 
   new_node->parent = parent;
   parent->children.push_back(new_node);
-  kd_insert3(kd_tree, new_node->pos[0], new_node->pos[1], new_node->pos[2],
-             new_node);
+  rtree->insert(std::make_pair(
+      point(new_node->pos[0], new_node->pos[1], new_node->pos[2]), new_node));
 
   return new_node;
 }
 
-RrtNode* Rrt::getGoal(kdtree* goal_tree, RrtNode* new_node, double l, double r,
-                      double r_os)
+std::shared_ptr<RrtNode> Rrt::getGoal(const point_rtree& goal_tree,
+                                      std::shared_ptr<RrtNode> new_node, double l,
+                                      double r, double r_os)
 {
-  kdres* nearest_goal =
-      kd_nearest3(goal_tree, new_node->pos[0], new_node->pos[1], new_node->pos[2]);
-  if (kd_res_size(nearest_goal) <= 0)
-  {
-    kd_res_free(nearest_goal);
-    return NULL;
-  }
-  Eigen::Vector3d* g_nn = (Eigen::Vector3d*)kd_res_item_data(nearest_goal);
-  kd_res_free(nearest_goal);
+  // TODO: How many neighbours to look for?
+  std::vector<point> nearest;
+  goal_tree.query(boost::geometry::index::nearest(
+                      point(new_node->pos[0], new_node->pos[1], new_node->pos[2]), 1),
+                  std::back_inserter(nearest));
 
-  if ((*g_nn - new_node->pos).norm() < 1.5)
-    if (!collisionLine(new_node->pos,
-                       *g_nn + (*g_nn - new_node->pos).normalized() * r_os, r))
-      return new_node;
+  for (point item : nearest)
+  {
+    Eigen::Vector3d goal_node(item.get<0>(), item.get<1>(), item.get<2>());
+
+    if ((goal_node - new_node->pos).norm() < 1.5)
+    {
+      if (!collisionLine(new_node->pos,
+                         goal_node + (goal_node - new_node->pos).normalized() * r_os, r))
+      {
+        return new_node;
+      }
+    }
+  }
 
   return NULL;
 }
 
-nav_msgs::Path Rrt::getBestPath(std::vector<RrtNode*> goals)
+nav_msgs::Path Rrt::getBestPath(std::vector<std::shared_ptr<RrtNode>> goals)
 {
   nav_msgs::Path path;
   if (goals.size() == 0)
@@ -246,13 +257,13 @@ nav_msgs::Path Rrt::getBestPath(std::vector<RrtNode*> goals)
     return path;
   }
 
-  RrtNode* best_node = goals[0];
+  std::shared_ptr<RrtNode> best_node = goals[0];
 
   for (int i = 0; i < goals.size(); ++i)
     if (best_node->cost() > goals[i]->cost())
       best_node = goals[i];
 
-  RrtNode* n = best_node;
+  std::shared_ptr<RrtNode> n = best_node;
   for (int id = 0; n->parent; ++id)
   {
     geometry_msgs::PoseStamped p;
@@ -283,56 +294,56 @@ nav_msgs::Path Rrt::getBestPath(std::vector<RrtNode*> goals)
   return path;
 }
 
-std::vector<geometry_msgs::Pose> Rrt::checkIfGoalReached(kdtree* goal_tree,
-                                                         RrtNode* new_node, double l,
-                                                         double r, double r_os)
+std::vector<geometry_msgs::Pose> Rrt::checkIfGoalReached(const point_rtree& goal_tree, std::shared_ptr<RrtNode> new_node, double l, double r, double r_os)
 {
   std::vector<geometry_msgs::Pose> path;
 
-  kdres* nearest_goal =
-      kd_nearest3(goal_tree, new_node->pos[0], new_node->pos[1], new_node->pos[2]);
-  if (kd_res_size(nearest_goal) <= 0)
-  {
-    kd_res_free(nearest_goal);
-    return path;
-  }
-  Eigen::Vector3d* g_nn = (Eigen::Vector3d*)kd_res_item_data(nearest_goal);
-  kd_res_free(nearest_goal);
+  // TODO: How many neighbours to look for?
+  std::vector<point> nearest;
+  goal_tree.query(boost::geometry::index::nearest(
+                      point(new_node->pos[0], new_node->pos[1], new_node->pos[2]), 1),
+                  std::back_inserter(nearest));
 
-  if ((*g_nn - new_node->pos).norm() < 2 * l)
+  for (point item : nearest)
   {
-    if (!collisionLine(new_node->pos,
-                       *g_nn + (*g_nn - new_node->pos).normalized() * r_os, r))
+    Eigen::Vector3d goal_node(item.get<0>(), item.get<1>(), item.get<2>());
+
+    if ((goal_node - new_node->pos).norm() < 2 * l)
     {
-      RrtNode* n = new_node;
-      for (int id = 0; n->parent; ++id)
+      if (!collisionLine(new_node->pos,
+                         goal_node + (goal_node - new_node->pos).normalized() * r_os, r))
       {
-        geometry_msgs::Pose p;
-        p.position.x = n->pos[0];
-        p.position.y = n->pos[1];
-        p.position.z = n->pos[2];
-        Eigen::Quaternion<double> q;
-        Eigen::Vector3d init(1.0, 0.0, 0.0);
-        // Zero out rotation
-        // along x and y axis
-        // so only yaw is kept
-        Eigen::Vector3d dir(n->pos[0] - n->parent->pos[0],
-                            n->pos[1] - n->parent->pos[1], 0);
-        q.setFromTwoVectors(init, dir);
+        std::shared_ptr<RrtNode> n = new_node;
+        for (int id = 0; n->parent; ++id)
+        {
+          geometry_msgs::Pose p;
+          p.position.x = n->pos[0];
+          p.position.y = n->pos[1];
+          p.position.z = n->pos[2];
+          Eigen::Quaternion<double> q;
+          Eigen::Vector3d init(1.0, 0.0, 0.0);
+          // Zero out rotation
+          // along x and y axis
+          // so only yaw is kept
+          Eigen::Vector3d dir(n->pos[0] - n->parent->pos[0],
+                              n->pos[1] - n->parent->pos[1], 0);
+          q.setFromTwoVectors(init, dir);
 
-        p.orientation.x = q.x();
-        p.orientation.y = q.y();
-        p.orientation.z = q.z();
-        p.orientation.w = q.w();
+          p.orientation.x = q.x();
+          p.orientation.y = q.y();
+          p.orientation.z = q.z();
+          p.orientation.w = q.w();
 
-        path.push_back(p);
-        visualizePose(p, id);
+          path.push_back(p);
+          visualizePose(p, id);
 
-        n = n->parent;
+          n = n->parent;
+        }
+
+        visualizePath(new_node);
       }
-
-      visualizePath(new_node);
     }
+    return path;  // Should only be one
   }
 
   return path;
@@ -609,7 +620,7 @@ void Rrt::visualizePose(geometry_msgs::Pose pose, int id)
   path_pub_.publish(a);
 }
 
-void Rrt::visualizeEdge(RrtNode* node, int id)
+void Rrt::visualizeEdge(std::shared_ptr<RrtNode> node, int id)
 {
   visualization_msgs::Marker a;
   a.header.stamp = ros::Time::now();
@@ -646,7 +657,7 @@ void Rrt::visualizeEdge(RrtNode* node, int id)
   path_pub_.publish(a);
 }
 
-void Rrt::visualizePath(RrtNode* node)
+void Rrt::visualizePath(std::shared_ptr<RrtNode> node)
 {
   for (int id = 0; node->parent; ++id)
   {

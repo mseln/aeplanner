@@ -14,8 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   genmsg
   actionlib_msgs 
   actionlib
-
-  kdtree
+  aeplanner_msgs
   nav_msgs
 )
 find_package(octomap REQUIRED)
@@ -116,7 +115,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include ${OCTOMAP_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS}
   LIBRARIES rrtplanner ${catkin_LIBRARIES} ${OCTOMAP_LIBRARIES}
-  CATKIN_DEPENDS message_runtime roscpp geometry_msgs visualization_msgs kdtree
+  CATKIN_DEPENDS message_runtime roscpp geometry_msgs visualization_msgs
 )
 
 ###########
