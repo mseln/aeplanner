@@ -1,0 +1,14 @@
+# Define the goal
+Header header
+int32 actions_taken
+-------
+# Define the result
+geometry_msgs/PoseStamped pose
+geometry_msgs/PoseArray frontiers
+bool is_clear
+std_msgs/Duration sampling_time
+std_msgs/Duration planning_time
+std_msgs/Duration collision_check_time
+int32 tree_size
+-------
+# Define a feedback message

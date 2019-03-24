@@ -1,0 +1,8 @@
+# Define the goal
+geometry_msgs/PoseStamped start
+geometry_msgs/PoseArray goal_poses
+-------
+# Define the result
+nav_msgs/Path path
+-------
+# Define a feedback message

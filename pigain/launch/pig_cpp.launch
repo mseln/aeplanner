@@ -1,7 +1,8 @@
 <?xml version="1.0" ?>
+
 <launch>
   <arg name="param_file" default="$(find pigain)/config/config.yaml" />
-  <node name="pig" pkg="pigain" type="pig.py" output="screen">
+  <node name="pig" pkg="pigain" type="pigain_node" output="screen">
     <remap from="pose" to="/mavros/local_position/pose"/>
     <rosparam command="load" file="$(arg param_file)" />
   </node>

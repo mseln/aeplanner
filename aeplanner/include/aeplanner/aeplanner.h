@@ -23,9 +23,9 @@
 #include <aeplanner/aeplannerAction.h>
 #include <actionlib/server/simple_action_server.h>
 
-#include <pigain/Node.h>
-#include <pigain/Query.h>
-#include <pigain/BestNode.h>
+#include <aeplanner_msgs/Node.h>
+#include <aeplanner_msgs/Query.h>
+#include <aeplanner_msgs/BestNode.h>
 
 #include <dynamic_reconfigure/server.h>
 #include <nav_msgs/Path.h>

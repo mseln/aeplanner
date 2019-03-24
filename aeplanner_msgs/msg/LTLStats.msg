@@ -1,0 +1,6 @@
+Header header
+float64 current_closest_distance
+float64 mean_closest_distance
+float64 closest_router_distance
+float64 ltl_min_distance
+float64 ltl_max_distance

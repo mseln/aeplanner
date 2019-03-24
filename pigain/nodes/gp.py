@@ -7,14 +7,17 @@ def sqexpkernel(x1, x2, hyperparam):
     n1 = x1.shape[0]
     n2 = x2.shape[0]
     K = np.empty([n1, n2])
-    print(n1, n2)
+    # print(n1, n2)
 
     for i in range(0,n2):
-        #print(x1)
-        #print(x2[i,:])
-        #print(x1 - x2[i,:])
+        # print("Hej")
+        # print(x1)
+        # print(x2[i,:])
+        # print(x1 - x2[i,:])
         l = np.linalg.norm(x1 - x2[i,:], axis = 1)
-        #print(l)
+        # print(l)
+        # print(hyperparam.sigma_f**2 * np.exp(-0.5 * (l / hyperparam.l)**2))
+        # print("BYE")
         K[:,i] = hyperparam.sigma_f**2 * np.exp(-0.5 * (l / hyperparam.l)**2)
 
     return K

@@ -14,8 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs 
   actionlib
 
-  kdtree
   pigain
+  aeplanner_msgs
   dynamic_reconfigure
 )
 find_package(cmake_modules REQUIRED)

@@ -4,9 +4,9 @@ from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 from geometry_msgs.msg import PoseStamped
 
-from pigain.msg import Node
-from pigain.srv import Query, QueryResponse
-from pigain.srv import BestNode, BestNodeResponse
+from aeplanner_msgs.msg import Node
+from aeplanner_msgs.srv import Query, QueryResponse
+from aeplanner_msgs.srv import BestNode, BestNodeResponse
 
 from aeplanner.srv import Reevaluate
 
@@ -37,7 +37,7 @@ class PIGain:
         if self.visualize_mean or self.visualize_sigma:
             rospy.Timer(rospy.Duration(5), self.evaluate)
 
-        # Get environment boundaries 
+        # Get environment boundaries
         try:
             self.min = rospy.get_param('boundary/min')
             self.max = rospy.get_param('boundary/max')
@@ -52,6 +52,7 @@ class PIGain:
         except KeyError:
             rospy.logwarn("Range max parameter not specified")
             rospy.logwarn("Defaulting to 8 m...")
+            self.range = 8
 
         self.bbx = (self.min[0], self.min[1], self.min[2], self.max[0], self.max[1], self.max[2])
 
@@ -67,7 +68,7 @@ class PIGain:
         self.idx = index.Index(properties = p)
         self.id = 0
 
-        rospy.Timer(rospy.Duration(5), self.reevaluate_timer_callback)
+        rospy.Timer(rospy.Duration(2), self.reevaluate_timer_callback)
 
     """ Save current pose of agent """
     def pose_callback(self, msg):
@@ -77,7 +78,6 @@ class PIGain:
 
     """ Reevaluate gain in all cached nodes that are closer to agent than self.range """
     def reevaluate_timer_callback(self, event):
-        rospy.loginfo("reevaluate start")
         if self.x is None or self.y is None or self.z is None:
             rospy.logwarn("No position received yet...")
             rospy.logwarn("Make sure that 'pose' has been correctly mapped and that it is being published")
@@ -91,8 +91,8 @@ class PIGain:
         reevaluate_list = []
         reevaluate_position_list = []
         for item in hits:
-            if(item.object.gain > 2):
-                reevaluate_position_list.append(item.object.position)
+            if(item.object.gain > 0.1):
+                reevaluate_position_list.append(item.object.pose.pose.position)
                 reevaluate_list.append(item)
         try:
             res = self.reevaluate_client(reevaluate_position_list)
@@ -104,14 +104,19 @@ class PIGain:
             item.object.gain = res.gain[i]
             item.object.yaw = res.yaw[i]
 
-            self.idx.delete(item.id, (item.object.position.x, item.object.position.y, item.object.position.z))
-            self.idx.insert(item.id, (item.object.position.x, item.object.position.y, item.object.position.z), obj=item.object)
-
-        rospy.loginfo("reevaluate done")
+            self.idx.delete(item.id, (item.object.position.x, 
+                                      item.object.position.y, 
+                                      item.object.position.z))
+            self.idx.insert(item.id, (item.object.position.x, 
+                                      item.object.position.y, 
+                                      item.object.position.z), 
+                                      obj=item.object)
 
     """ Insert node with estimated gain in rtree """
     def gain_callback(self, msg):
-        self.idx.insert(self.id, (msg.position.x, msg.position.y, msg.position.z), obj=msg)
+        self.idx.insert(self.id, (msg.pose.pose.position.x, 
+                                  msg.pose.pose.position.y, 
+                                  msg.pose.pose.position.z), obj=msg)
         self.id += 1
 
     """ Handle query to Gaussian Process """
@@ -125,11 +130,13 @@ class PIGain:
 
         for item in hits:
             y = np.append(y, [item.object.gain], axis=0)
-            x = np.append(x, [[item.object.position.x, item.object.position.y, item.object.position.z]], axis = 0)
+            x = np.append(x, [[item.object.pose.pose.position.x, 
+                               item.object.pose.pose.position.y, 
+                               item.object.pose.pose.position.z]], axis = 0)
 
         yaw = 0
         for item in nearest:
-            yaw = item.object.yaw
+            yaw = tf.transformations.euler_from_quaternion(item.object.pose.pose.orientation)
 
         if y.shape[0] == 0:
             response = QueryResponse()
@@ -157,7 +164,7 @@ class PIGain:
         response = BestNodeResponse()
         for item in hits:
             if item.object.gain > req.threshold:
-                response.best_node.append(item.object.position)
+                response.best_node.append(item.object.pose)
             if item.object.gain > best_gain:
                 best_gain = item.object.gain
 
@@ -172,7 +179,9 @@ class PIGain:
         hits = self.idx.intersection(self.bbx, objects=True)
         for item in hits:
             y = np.append(y, [item.object.gain], axis=0)
-            x = np.append(x, [[item.object.position.x, item.object.position.y, item.object.position.z]], axis = 0)
+            x = np.append(x, [[item.object.pose.pose.position.x, 
+                               item.object.pose.pose.position.y, 
+                               item.object.pose.pose.position.z]], axis = 0)
 
         xt = np.arange(self.min[0], self.max[0], self.resolution)
         yt = np.arange(self.min[1], self.max[1], self.resolution)
@@ -212,8 +221,8 @@ class PIGain:
         marker.scale.x = self.resolution
         marker.scale.y = self.resolution
         marker.scale.z = 0.1
-        marker.color.r = v / 72.0
-        marker.color.g = 0 
+        marker.color.r = v
+        marker.color.g = 0
         marker.color.b = 0.5
         marker.color.a = a
         marker.pose.orientation.w = 1.0
@@ -234,15 +243,15 @@ class PIGain:
         marker.scale.x = 0.4
         marker.scale.y = 0.4
         marker.scale.z = 0.4
-        marker.color.r = node.gain / 72.0
+        marker.color.r = node.gain
         marker.color.g = 0.0
         marker.color.b = 0.5
         marker.color.a = 1.0
         marker.pose.orientation.w = 1.0
-        marker.pose.position.x = node.position.x
-        marker.pose.position.y = node.position.y
-        marker.pose.position.z = node.position.z
-        marker.lifetime = rospy.Time(1.2)
+        marker.pose.position.x = node.pose.pose.position.x
+        marker.pose.position.y = node.pose.pose.position.y
+        marker.pose.position.z = node.pose.pose.position.z
+        marker.lifetime = rospy.Time(5)
 
         return marker
 

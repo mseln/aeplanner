@@ -9,10 +9,10 @@ AEPlanner::AEPlanner(const ros::NodeHandle& nh)
   , octomap_sub_(nh_.subscribe("octomap", 1, &AEPlanner::octomapCallback, this))
   , agent_pose_sub_(nh_.subscribe("agent_pose", 1, &AEPlanner::agentPoseCallback, this))
   , rrt_marker_pub_(nh_.advertise<visualization_msgs::MarkerArray>("rrtree", 1000))
-  , gain_pub_(nh_.advertise<pigain::Node>("gain_node", 1000))
-  , gp_query_client_(nh_.serviceClient<pigain::Query>("gp_query_server"))
+  , gain_pub_(nh_.advertise<aeplanner_msgs::Node>("gain_node", 1000))
+  , gp_query_client_(nh_.serviceClient<aeplanner_msgs::Query>("gp_query_server"))
   , reevaluate_server_(nh_.advertiseService("reevaluate", &AEPlanner::reevaluate, this))
-  , best_node_client_(nh_.serviceClient<pigain::BestNode>("best_node_server"))
+  , best_node_client_(nh_.serviceClient<aeplanner_msgs::BestNode>("best_node_server"))
   , current_state_initialized_(false)
   , ot_(NULL)
   , best_node_(NULL)
@@ -98,9 +98,7 @@ std::shared_ptr<RRTNode> AEPlanner::initialize()
     root->state_[0] = current_state_[0];
     root->state_[1] = current_state_[1];
     root->state_[2] = current_state_[2];
-    ROS_ERROR_STREAM("Inserting...");
     rtree_.insert(std::make_pair(point(root->state_[0], root->state_[1], root->state_[2]), root));
-    ROS_ERROR_STREAM("Inserting... [done]!");
   }
 
   return root;
@@ -303,7 +301,7 @@ Eigen::Vector4d AEPlanner::restrictDistance(Eigen::Vector4d nearest,
 
 std::pair<double, double> AEPlanner::getGain(std::shared_ptr<RRTNode> node)
 {
-  pigain::Query srv;
+  aeplanner_msgs::Query srv;
   srv.request.point.x = node->state_[0];
   srv.request.point.y = node->state_[1];
   srv.request.point.z = node->state_[2];
@@ -321,7 +319,6 @@ std::pair<double, double> AEPlanner::getGain(std::shared_ptr<RRTNode> node)
 
   node->gain_explicitly_calculated_ = true;
   std::pair<double, double> ret = gainCubature(node->state_);
-  ROS_INFO_STREAM("gain expl: " << ret.first);
   return ret;
 }
 
@@ -437,7 +434,7 @@ geometry_msgs::PoseArray AEPlanner::getFrontiers()
 {
   geometry_msgs::PoseArray frontiers;
 
-  pigain::BestNode srv;
+  aeplanner_msgs::BestNode srv;
   srv.request.threshold = 16; // FIXME parameterize
   if (best_node_client_.call(srv))
   {
@@ -514,12 +511,17 @@ void AEPlanner::publishEvaluatedNodesRecursive(std::shared_ptr<RRTNode> node)
   {
     if ((*node_it)->gain_explicitly_calculated_)
     {
-      pigain::Node pig_node;
+      aeplanner_msgs::Node pig_node;
       pig_node.gain = (*node_it)->gain_;
-      pig_node.position.x = (*node_it)->state_[0];
-      pig_node.position.y = (*node_it)->state_[1];
-      pig_node.position.z = (*node_it)->state_[2];
-      pig_node.yaw = (*node_it)->state_[3];
+      pig_node.pose.pose.position.x = (*node_it)->state_[0];
+      pig_node.pose.pose.position.y = (*node_it)->state_[1];
+      pig_node.pose.pose.position.z = (*node_it)->state_[2];
+      tf2::Quaternion q;
+      q.setRPY(0, 0, (*node_it)->state_[3]);
+      pig_node.pose.pose.orientation.x = q.x();
+      pig_node.pose.pose.orientation.y = q.y();
+      pig_node.pose.pose.orientation.z = q.z();
+      pig_node.pose.pose.orientation.w = q.w();
       gain_pub_.publish(pig_node);
     }
 
