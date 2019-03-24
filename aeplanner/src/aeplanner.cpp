@@ -67,9 +67,10 @@ void AEPlanner::execute(const aeplanner::aeplannerGoalConstPtr& goal)
   {
     result.frontiers = getFrontiers();
     result.is_clear = false;
-    // delete best_branch_root_;
     best_branch_root_ = NULL;
   }
+  
+  rtree_.clear();
   as_.setSucceeded(result);
 }
 
