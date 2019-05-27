@@ -8,6 +8,8 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   visualization_msgs
   message_generation
+  rqt_gui_cpp
+  rqt_gui
   tf
   tf2
   genmsg 
