@@ -63,7 +63,6 @@ bool PIG::gpQueryCallback(aeplanner_msgs::Query::Request& req,
                           aeplanner_msgs::Query::Response& res)
 {
 
-  clock_t start = clock();
   box query_box(point(req.point.x - 2, req.point.y - 2, req.point.z - 2),
                 point(req.point.x + 2, req.point.y + 2, req.point.z + 2));
   std::vector<value> hits;
@@ -108,13 +107,6 @@ bool PIG::gpQueryCallback(aeplanner_msgs::Query::Request& req,
   res.mu = gp_response.first;
   res.sigma = gp_response.second;
   res.yaw = yaw;
-
-  clock_t stop = clock();
-  ROS_WARN_STREAM("Implicit: " << ((float)(stop-start)) / CLOCKS_PER_SEC);
-  std::ofstream f; 
-  f.open("/home/mseln/implicit.out", std::ios_base::app); 
-  f << ((float)(stop-start)) / CLOCKS_PER_SEC << '\n';
-  f.close();
 
   return true;
 }

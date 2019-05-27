@@ -319,14 +319,7 @@ std::pair<double, double> AEPlanner::getGain(std::shared_ptr<RRTNode> node)
   }
 
   node->gain_explicitly_calculated_ = true;
-  clock_t start = clock();
   std::pair<double, double> ret = gainCubature(node->state_);
-  clock_t stop = clock();
-  ROS_WARN_STREAM("Explicit: " << ((float)(stop-start)) / CLOCKS_PER_SEC);
-  std::ofstream f; 
-  f.open("/home/mseln/explicit.out", std::ios_base::app); 
-  f << ((float)(stop-start)) / CLOCKS_PER_SEC << '\n';
-  f.close();
 
   return ret;
 }
