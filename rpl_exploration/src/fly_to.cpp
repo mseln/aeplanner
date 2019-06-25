@@ -4,6 +4,8 @@
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
 
+#include <geometry_msgs/PoseStamped.h>
+
 namespace rpl_exploration {
   class FlyTo
   {
@@ -13,19 +15,26 @@ namespace rpl_exploration {
       actionlib::SimpleActionServer<rpl_exploration::FlyToAction> as_;
 
       tf::TransformListener listener;
+      geometry_msgs::PoseStamped last_pose_;
+      ros::Timer publish_last_pose_timer_;
     public:
       FlyTo() : pub_(nh_.advertise<geometry_msgs::PoseStamped>("fly_to_cmd", 1000)),
                 as_(nh_, "fly_to", boost::bind(&FlyTo::execute, this, _1, &as_), false)
       {
         ROS_INFO("Starting fly to server");
         as_.start();
+        publish_last_pose_timer_ = nh_.createTimer(ros::Duration(0.05), &FlyTo::publish_last_pose, this);
+
       }
       void execute(const rpl_exploration::FlyToGoalConstPtr& goal, 
                    actionlib::SimpleActionServer<rpl_exploration::FlyToAction> * as)
       {
+        publish_last_pose_timer_.stop();
         ROS_INFO_STREAM("Got new goal: Fly to (" << goal->pose.pose.position.x << ", "
                                                  << goal->pose.pose.position.y << ", "
                                                  << goal->pose.pose.position.z << ") ");
+
+        geometry_msgs::PoseStamped goal_pose = goal->pose;
 
         ros::Rate r(20);
         geometry_msgs::Point p = goal->pose.pose.position;
@@ -38,19 +47,23 @@ namespace rpl_exploration {
         transform.setRotation( tf::Quaternion(0, 0, 0, 1) );
 
         tf::Quaternion gq(
-          goal->pose.pose.orientation.x,
-          goal->pose.pose.orientation.y,
-          goal->pose.pose.orientation.z,
-          goal->pose.pose.orientation.w);
+          goal_pose.pose.orientation.x,
+          goal_pose.pose.orientation.y,
+          goal_pose.pose.orientation.z,
+          goal_pose.pose.orientation.w);
         tf::Matrix3x3 m(gq);
         double roll, pitch, goal_yaw;
         m.getRPY(roll, pitch, goal_yaw);
+
+        goal_pose.header.stamp = ros::Time::now();
+        goal_pose.header.frame_id = "map";
 
         // Check if target is reached...
         do
         {
           ROS_INFO_STREAM("Publishing goal to (" << p.x << ", " << p.y << ", " << p.z << ") ");
-          pub_.publish(goal->pose);
+          goal_pose.header.stamp = ros::Time::now();
+          pub_.publish(goal_pose);
 
           listener.waitForTransform("/map", "/base_link", ros::Time(0), ros::Duration(10.0) );
           listener.lookupTransform("/map", "/base_link", ros::Time(0), transform);
@@ -83,8 +96,16 @@ namespace rpl_exploration {
           r.sleep();
         } while(distance_to_goal > 0.8 or yaw_diff > 0.6*M_PI);
 
+        last_pose_ = goal_pose;
 
+        publish_last_pose_timer_.start();
         as->setSucceeded();
+      }
+
+      void publish_last_pose(const ros::TimerEvent&)
+      {
+          last_pose_.header.stamp = ros::Time::now();
+          pub_.publish(last_pose_);
       }
   };
 

@@ -30,11 +30,6 @@ int main(int argc, char** argv)
   logfile.open(path + "/data/logfile.csv");
   pathfile.open(path + "/data/path.csv");
 
-  ros::Publisher pub(nh.advertise<geometry_msgs::PoseStamped>("/mavros/"
-                                                              "setpoint_position/"
-                                                              "local",
-                                                              1000));
-
   ros::ServiceClient coverage_srv =
       nh.serviceClient<aeplanner_evaluation::Coverage>("/get_coverage");
 
@@ -75,6 +70,7 @@ int main(int argc, char** argv)
   // allows the planning of initial paths.
   ROS_INFO("Starting the planner: Performing initialization motion");
   geometry_msgs::PoseStamped last_pose;
+  last_pose.header.frame_id = "map";
 
   for (int i = 0; i < 2; ++i)
   {
@@ -110,7 +106,7 @@ int main(int argc, char** argv)
 
     while (!aep_ac.waitForResult(ros::Duration(0.05)))
     {
-      pub.publish(last_pose);
+      // Do nothing
     }
 
     ros::Duration fly_time;
@@ -153,7 +149,7 @@ int main(int argc, char** argv)
       rrt_ac.sendGoal(rrt_goal);
       while (!rrt_ac.waitForResult(ros::Duration(0.05)))
       {
-        pub.publish(last_pose);
+        // Do nothing
       }
       nav_msgs::Path path = rrt_ac.getResult()->path;
 
