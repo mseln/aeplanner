@@ -27,7 +27,7 @@ namespace rpl_exploration {
                                                  << goal->pose.pose.position.y << ", "
                                                  << goal->pose.pose.position.z << ") ");
 
-        ros::Rate r(20);
+        ros::Rate r(2);
         geometry_msgs::Point p = goal->pose.pose.position;
 
         float distance_to_goal = 9001; // Distance is over 9000
@@ -52,8 +52,8 @@ namespace rpl_exploration {
           ROS_INFO_STREAM("Publishing goal to (" << p.x << ", " << p.y << ", " << p.z << ") ");
           pub_.publish(goal->pose);
 
-          listener.waitForTransform("/map", "/base_link", ros::Time(0), ros::Duration(10.0) );
-          listener.lookupTransform("/map", "/base_link", ros::Time(0), transform);
+          listener.waitForTransform("/odom", "/base_link", ros::Time(0), ros::Duration(10.0) );
+          listener.lookupTransform("/odom", "/base_link", ros::Time(0), transform);
 
           geometry_msgs::Point q;
           q.x = (float)transform.getOrigin().x(); 
@@ -81,7 +81,7 @@ namespace rpl_exploration {
           yaw_diff = fabs(atan2(sin(goal_yaw-current_yaw), cos(goal_yaw-current_yaw)));
 
           r.sleep();
-        } while(distance_to_goal > 0.8 or yaw_diff > 0.6*M_PI);
+        } while(ros::ok() && (distance_to_goal > 0.8 or yaw_diff > 0.6*M_PI));
 
 
         as->setSucceeded();
