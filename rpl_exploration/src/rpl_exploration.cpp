@@ -63,13 +63,20 @@ int main(int argc, char** argv)
                                                              "local_position/pose");
   double init_yaw = tf2::getYaw(init_pose->pose.orientation);
   // Up 2 meters and then forward one meter
-  double initial_positions[8][4] = {
-    { init_pose->pose.position.x, init_pose->pose.position.y,
-      init_pose->pose.position.z + 2.0, init_yaw },
-    { init_pose->pose.position.x + 1.0 * std::cos(init_yaw),
-      init_pose->pose.position.y + 1.0 * std::sin(init_yaw),
-      init_pose->pose.position.z + 2.0, init_yaw },
-  };
+//  double initial_positions[8][4] = {
+//    { init_pose->pose.position.x, init_pose->pose.position.y,
+//      init_pose->pose.position.z + 2.0, init_yaw },
+//    { init_pose->pose.position.x + 1.0 * std::cos(init_yaw),
+//      init_pose->pose.position.y + 1.0 * std::sin(init_yaw),
+//      init_pose->pose.position.z + 2.0, init_yaw },
+//  };
+
+  // Modification for UGV to reduce z to zero
+    double initial_positions[8][4] = {
+      { init_pose->pose.position.x + 5, init_pose->pose.position.y, 0.0, init_yaw },
+      { init_pose->pose.position.x + 5 * std::cos(init_yaw),
+        init_pose->pose.position.y + 1.0 * std::sin(init_yaw), 0.0, init_yaw },
+    };
 
   // This is the initialization motion, necessary that the known free space
   // allows the planning of initial paths.
@@ -79,17 +86,24 @@ int main(int argc, char** argv)
   for (int i = 0; i < 2; ++i)
   {
     rpl_exploration::FlyToGoal goal;
+    // Added header to support move base
+    goal.pose.header.stamp = ros::Time::now();
+    goal.pose.header.frame_id  = "odom";
     goal.pose.pose.position.x = initial_positions[i][0];
     goal.pose.pose.position.y = initial_positions[i][1];
     goal.pose.pose.position.z = initial_positions[i][2];
     goal.pose.pose.orientation =
         tf::createQuaternionMsgFromYaw(initial_positions[i][3]);
     last_pose.pose = goal.pose.pose;
-
-    ROS_INFO_STREAM("Sending initial goal...");
+    last_pose.header.stamp = ros::Time::now();
+    last_pose.header.frame_id  = "odom";
+    ROS_INFO_STREAM("Current position: (" << init_pose->pose.position.x << ", " << init_pose->pose.position.y << ", " << init_pose->pose.position.z << ") ");
+    ROS_INFO_STREAM("Sending initial goal..." << goal);
     ac.sendGoal(goal);
 
     ac.waitForResult(ros::Duration(0));
+
+	printf("Current State: %s\n", ac.getState().toString().c_str());
   }
 
   // Start planning: The planner is called and the computed path sent to the
@@ -104,14 +118,17 @@ int main(int argc, char** argv)
     aeplanner::aeplannerGoal aep_goal;
     aep_goal.header.stamp = ros::Time::now();
     aep_goal.header.seq = iteration;
-    aep_goal.header.frame_id = "map";
+    aep_goal.header.frame_id = "odom";
     aep_goal.actions_taken = actions_taken;
+    ROS_INFO_STREAM("Sending goal..." << aep_goal);
     aep_ac.sendGoal(aep_goal);
 
     while (!aep_ac.waitForResult(ros::Duration(0.05)))
     {
       pub.publish(last_pose);
+      ROS_INFO_STREAM("Not waiting for the result, sending last pose." << last_pose);
     }
+    ROS_INFO_STREAM("Current result" << aep_ac.getResult());
 
     ros::Duration fly_time;
     if (aep_ac.getResult()->is_clear)
@@ -126,6 +143,9 @@ int main(int argc, char** argv)
 
       last_pose.pose = goal_pose.pose;
       rpl_exploration::FlyToGoal goal;
+      // Added header to support move base
+      goal.pose.header.stamp = ros::Time::now();
+      goal.pose.header.frame_id  = "odom";
       goal.pose = goal_pose;
       ac.sendGoal(goal);
 
@@ -137,7 +157,7 @@ int main(int argc, char** argv)
     {
       rrtplanner::rrtGoal rrt_goal;
       rrt_goal.start.header.stamp = ros::Time::now();
-      rrt_goal.start.header.frame_id = "map";
+      rrt_goal.start.header.frame_id = "odom";
       rrt_goal.start.pose = last_pose.pose;
       if (!aep_ac.getResult()->frontiers.poses.size())
       {
@@ -167,6 +187,9 @@ int main(int argc, char** argv)
 
         last_pose.pose = goal_pose;
         rpl_exploration::FlyToGoal goal;
+        // Added header to support move base
+	goal.pose.header.stamp = ros::Time::now();
+      	goal.pose.header.frame_id  = "odom";
         goal.pose.pose = goal_pose;
         ac.sendGoal(goal);
 

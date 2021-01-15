@@ -8,11 +8,15 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   visualization_msgs
   message_generation
+  rqt_gui_cpp
+  rqt_gui
   tf
   tf2
   genmsg 
   actionlib_msgs 
   actionlib
+  nodelet
+  std_msgs
 
   kdtree
   pigain
@@ -44,9 +48,8 @@ generate_messages(
 )
 
 catkin_package(
-  INCLUDE_DIRS include ${Eigen_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS}
   LIBRARIES aeplanner ${catkin_LIBRARIES} ${OCTOMAP_LIBRARIES}
-  CATKIN_DEPENDS message_runtime roscpp geometry_msgs visualization_msgs tf kdtree
+  CATKIN_DEPENDS message_runtime roscpp geometry_msgs visualization_msgs tf kdtree actionlib_msgs std_msgs
 )
 
 include_directories(
